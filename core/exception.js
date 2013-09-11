@@ -36,10 +36,10 @@ var logger = require("core/logger").logger("exception");
     @requires montage/core/logger
 */
 /**
-    @class module:montage/core/exception.Exception
-    @extends module:montage/core/core.Montage
+    @class Exception
+    @extends Montage
 */
-var Exception = exports.Exception = Montage.create(Montage,/** @lends module:montage/core/exception.Exception# */ {
+var Exception = exports.Exception = Montage.specialize(/** @lends Exception# */ {
 /**
         @type {Property}
         @default {String} null
@@ -61,6 +61,13 @@ var Exception = exports.Exception = Montage.create(Montage,/** @lends module:mon
     method: {
         value: null
     },
+
+    constructor: {
+        value: function Exception() {
+            this.super();
+        }
+    },
+
    /**
     @function
     @param {String} message The message to be initialized.

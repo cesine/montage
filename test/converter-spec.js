@@ -45,18 +45,19 @@ describe("converter-spec", function() {
     var date = new Date('25 Aug 2011 12:00:00 PM');
 
     beforeEach(function() {
-        //stringConverter = Montage.create(StringConverter);
-        ucaseConverter = Montage.create(UpperCaseConverter);
-        lcaseConverter = Montage.create(LowerCaseConverter);
-        trimConverter = Montage.create(TrimConverter);
+        //stringConverter = new StringConverter();
+        ucaseConverter = new UpperCaseConverter();
+        lcaseConverter = new LowerCaseConverter();
+        trimConverter = new TrimConverter();
 
-        numberConverter = Montage.create(NumberConverter);
+        numberConverter = new NumberConverter();
         numberConverter.shorten = true;
-        bytesConverter = Montage.create(BytesConverter);
-        dateConverter = Montage.create(DateConverter);
-        currencyConverter = Montage.create(CurrencyConverter);
+        bytesConverter = new BytesConverter();
+        dateConverter = new DateConverter();
+        currencyConverter = new CurrencyConverter();
+        currencyConverter.shorten = true;
 
-        dateConverter = Montage.create(DateConverter);
+        dateConverter = new DateConverter();
         //dateConverter.pattern = 'YYYY-MM-DD';
     });
 
@@ -120,6 +121,23 @@ describe("converter-spec", function() {
             numberConverter.shorten = false;
             var result = numberConverter.convert(value);
             expect(result).toBe('1,509,000.929');
+        });
+
+        it("should, by default, not include trailing 0s after the decimal", function() {
+            var value = 12.2
+            numberConverter.decimals = 2;
+            numberConverter.shorten = false;
+            var result = numberConverter.convert(value);
+            expect(result).toBe('12.2');
+        });
+
+        it("should add trailing 0s in decimal places when forceDecimals is on", function() {
+            var value = 12.2
+            numberConverter.decimals = 2;
+            numberConverter.shorten = false;
+            numberConverter.forceDecimals = true;
+            var result = numberConverter.convert(value);
+            expect(result).toBe('12.20');
         });
 
     });
@@ -250,6 +268,40 @@ describe("converter-spec", function() {
             currencyConverter.decimals = 5;
             var result = currencyConverter.convert(value);
             expect(result).toBe('-12.5002K $');
+        });
+        it("should not shorten when asked not to", function() {
+            var value = -12400;
+            currencyConverter.useParensForNegative = false;
+            currencyConverter.decimals = 0
+            currencyConverter.shorten = false;
+            var result = currencyConverter.convert(value);
+            expect(result).toBe("-12,400 $");
+        });
+        it("should allow putting currency before the number", function() {
+            var value = -12400;
+            currencyConverter.useParensForNegative = false;
+            currencyConverter.decimals = 0
+            currencyConverter.shorten = false;
+            currencyConverter.showCurrencyBeforeNumber = true;
+            var result = currencyConverter.convert(value);
+            expect(result).toBe("$ -12,400");
+        });
+        it("should allow putting currency before the number", function() {
+            var value = -12400;
+            currencyConverter.useParensForNegative = false;
+            currencyConverter.decimals = 0
+            currencyConverter.shorten = false;
+            currencyConverter.showCurrencyBeforeNumber = false;
+            var result = currencyConverter.convert(value);
+            expect(result).toBe("-12,400 $");
+        });
+        it("should include all requested decimal places", function() {
+            var value = 12.2;
+            currencyConverter.decimals = 2;
+            currencyConverter.showCurrencyBeforeNumber = true;
+            currencyConverter.shorten = false;
+            var result = currencyConverter.convert(value);
+            expect(result).toBe("$ 12.20")
         });
     });
 

@@ -1,13 +1,14 @@
 var Montage = require("montage").Montage,
     Set = require("montage/collections/set"),
     UndoManager = require("montage/core/undo-manager").UndoManager,
-    Promise = require("montage/core/promise").Promise;
+    Promise = require("montage/core/promise").Promise,
+    WAITS_FOR_TIMEOUT = 2500;
 
-var Roster = Montage.create(Montage, {
+var Roster = Montage.specialize( {
 
-    didCreate: {
+    constructor: {
         value: function () {
-            this._members = new Set();
+            this._members = [];
         }
     },
 
@@ -34,23 +35,58 @@ var Roster = Montage.create(Montage, {
 
     members: {
         get: function () {
-            return this._members
+            return this._members;
         }
     },
 
     //NOTE these APIs return the add promise to expose more testing surface area, this is not a demand of the undo system
 
     addMember: {
-        value: function (member) {
-            this.members.add(member);
-            return this.undoManager.register("Add Member", Promise.resolve(["Add " + member, this.removeMember, this, member]));
+        value: function (member, position) {
+            position = position || this.members.length;
+            this._members.splice(position, 0, member);
+            return this.undoManager.register("Add " + member, Promise.resolve([this.removeMember, this, member]));
         }
     },
 
     removeMember: {
         value: function (member) {
-            this.members.delete(member);
-            return this.undoManager.register("Remove Member", Promise.resolve(["Remove " + member, this.addMember, this, member]));
+            var index = this._members.indexOf(member);
+            if (index !== -1) {
+                this._members.splice(index, 1);
+
+                var foo = this.undoManager.register("Remove " + member, Promise.resolve([this.addMember, this, member, index]));
+                foo.memberName = member;
+                return foo;
+            } else {
+                return Promise.resolve();
+            }
+
+        }
+    },
+
+    removeAllMembers: {
+        value: function () {
+
+            this.undoManager.openBatch("Remove All Members");
+
+            while (this._members.length) {
+                this.removeMember(this._members[this._members.length - 1]);
+            }
+
+            this.undoManager.closeBatch();
+        }
+    },
+
+    replaceAllMembers: {
+        value: function () {
+
+            this.undoManager.openBatch("Replace All Members");
+
+            this.removeAllMembers();
+            this.addMember("Replacement")
+
+            this.undoManager.closeBatch();
         }
     },
 
@@ -67,13 +103,57 @@ var Roster = Montage.create(Montage, {
     }
 });
 
+var Text = Montage.specialize({
+    initWithUndoManager: {
+        value: function (undoManager) {
+            this.undoManager = undoManager;
+            return this;
+        }
+    },
+
+    text: {
+        value: "abc"
+    },
+
+    del: {
+        value: function (isSlow) {
+            var self = this;
+            var promise = isSlow ? Promise.delay(20) : Promise.resolve();
+
+            promise = promise.then(function () {
+                var c = self.text.charAt(self.text.length - 1);
+                self.text = self.text.substring(0, self.text.length - 1);
+
+                return [self.add, self, c, isSlow];
+            });
+
+            return self.undoManager.register("Delete character", promise);
+        }
+    },
+
+    add: {
+        value: function (c, isSlow) {
+            var self = this;
+            var promise = isSlow ? Promise.delay(20) : Promise.resolve();
+
+            promise = promise.then(function () {
+                self.text += c;
+
+                return [self.del, self, isSlow];
+            });
+
+            return self.undoManager.register("Add character", promise);
+        }
+    }
+});
+
 describe('core/undo-manager-spec', function () {
 
     var undoManager, roster;
 
     beforeEach(function () {
-        undoManager = UndoManager.create();
-        roster = Roster.create().initWithUndoManager(undoManager);
+        undoManager = new UndoManager();
+        roster = new Roster().initWithUndoManager(undoManager);
     });
 
     describe("initially", function () {
@@ -133,6 +213,13 @@ describe('core/undo-manager-spec', function () {
 
     describe("registering operations", function () {
 
+        it("must not register operations when registration is disabled", function () {
+            undoManager.registrationEnabled = false;
+            roster.addMember("Alice");
+
+            expect(undoManager.undoCount).toBe(0);
+        });
+
         it("should add to the undo stack when not undoing or redoing", function () {
             roster.addMember("Alice");
 
@@ -164,8 +251,17 @@ describe('core/undo-manager-spec', function () {
 
         it("must reject adding non-promises", function () {
             expect(function () {
-                expectundoManager.register("Something", function () {});
+                undoManager.register("Something", function () {});
             }).toThrow();
+        });
+
+        it("must reject if no undo function was given", function () {
+            return undoManager.register("Something", Promise.resolve([]))
+            .then(function () {
+                throw new Error("should be rejected");
+            }, function (error) {
+                expect(error.message).toBe("Need undo function for 'Something' operation, not: undefined");
+            });
         });
 
     });
@@ -276,7 +372,7 @@ describe('core/undo-manager-spec', function () {
 
             return Promise.all([undoManager.undo(), undoManager.undo(), undoManager.undo()]).then(function () {
                 expect(roster.members.length).toBe(0);
-               return  undoManager.redo()
+                return undoManager.redo();
             }).then(function () {
                 expect(roster.members.length).toBe(1);
                 expect(roster.members.has("Alice")).toBe(true);
@@ -292,13 +388,256 @@ describe('core/undo-manager-spec', function () {
                     .then(function () {
                         expect(roster.members.length).toBe(1);
                         expect(roster.members.has("Alice")).toBe(true);
-                        return undoManager.undo()
+                        return undoManager.undo();
                     });
             }).then(function () {
                 expect(roster.members.length).toBe(0);
             });
         });
 
+        it("should correctly reject an exceptional undo operation", function () {
+            var error = new Error("Undo Operation Exception");
+            var deferredAdditionUndo = roster.testableAddMember("Alice"),
+                spyObject = {
+                    removeMember: function (member) {
+                        throw error;
+                    }
+                };
+
+            spyOn(spyObject, "removeMember").andCallThrough();
+            deferredAdditionUndo.resolve(["Test Label", spyObject.removeMember, spyObject, "Alice"]);
+
+            return undoManager.undo().fail(function (failure) {
+                expect(spyObject.removeMember).toHaveBeenCalled();
+                expect(failure).toBe(error);
+            }).timeout(WAITS_FOR_TIMEOUT);
+        });
+
+        it("should report the expected undoLabel while in the middle of undoing", function () {
+            var deferredAdditionUndo = roster.testableAddMember("Alice"),
+                spyObject = {
+                    removeMember: function (member) {
+                        expect(undoManager.undoLabel).toBe("Test Label");
+                    }
+                };
+
+            spyOn(spyObject, "removeMember").andCallThrough();
+            deferredAdditionUndo.resolve(["Test Label", spyObject.removeMember, spyObject, "Alice"]);
+
+            return undoManager.undo().then(function (success) {
+                expect(spyObject.removeMember).toHaveBeenCalled();
+            }).timeout(WAITS_FOR_TIMEOUT);
+        });
+
+        it("maintains order when an operation is a long running async operation", function () {
+            var text = new Text().initWithUndoManager(undoManager);
+
+            text.del(true);
+            text.del(false);
+
+            undoManager.undo().done();
+            return undoManager.undo().then(function () {
+                expect(text.text).toBe("abc");
+            });
+        });
+
     });
 
+    describe("batch operations", function () {
+
+        beforeEach(function() {
+            roster._members = ["Alice", "Bob", "Carol"];
+        });
+
+        describe("registration", function () {
+
+            it("should consider multiple undo registrations within a single batch as a single undo operation", function () {
+                roster.removeAllMembers();
+                expect(undoManager.undoCount).toBe(1);
+                expect(undoManager.undoLabel).toBe("Remove All Members");
+            });
+
+        });
+
+        describe("undoing", function () {
+
+            it("should perform all undo operations within the batch operation", function () {
+                roster.removeAllMembers();
+                return undoManager.undo().then(function () {
+                    expect(roster.members.length).toBe(3);
+                    expect(roster.members[0]).toBe('Alice');
+                    expect(roster.members[1]).toBe('Bob');
+                    expect(roster.members[2]).toBe('Carol');
+                }).timeout(WAITS_FOR_TIMEOUT);
+            });
+
+            it("should perform the undos in the oposite order to the registrations", function () {
+                undoManager.openBatch("Ordered removal");
+                roster.removeMember('Carol');
+                roster.removeMember('Bob');
+                undoManager.closeBatch();
+
+                return undoManager.undo().then(function () {
+                    expect(roster.members.length).toBe(3);
+                    expect(roster.members[0]).toBe('Alice');
+                    expect(roster.members[1]).toBe('Bob');
+                    expect(roster.members[2]).toBe('Carol');
+                }).timeout(WAITS_FOR_TIMEOUT);
+            });
+
+        });
+
+        describe("redoing", function () {
+
+            it("should perform all redo operations within the batch operation", function () {
+                roster.removeAllMembers();
+                return undoManager.undo().then(function () {
+                    return undoManager.redo();
+                }).then(function () {
+                    expect(roster.members.length).toBe(0);
+                }).timeout(WAITS_FOR_TIMEOUT);
+            });
+
+            it("should perform all redo operations within a batch itself", function () {
+                roster.removeAllMembers();
+                return undoManager.undo().then(function () {
+                    return undoManager.redo();
+                }).then(function () {
+                    expect(undoManager.undoCount).toBe(1);
+                    expect(undoManager.redoCount).toBe(0);
+                }).timeout(WAITS_FOR_TIMEOUT);
+            });
+
+        });
+
+        it("maintains order when an operation is a long running async operation", function () {
+            var text = new Text().initWithUndoManager(undoManager);
+
+            undoManager.openBatch("Delete 2 characters");
+            text.del(false);
+            text.del(true);
+            undoManager.closeBatch();
+
+            return undoManager.undo().then(function () {
+                expect(text.text).toBe("abc");
+            });
+        });
+
+    });
+
+    describe("nested batch operations", function () {
+
+        beforeEach(function() {
+            roster._members = ["Alice", "Bob", "Carol"];
+        });
+
+        describe("registration", function () {
+
+            it("should consider multiple undo batch registrations within a single parent batch as a single undo operation", function () {
+                roster.replaceAllMembers();
+                expect(undoManager.undoCount).toBe(1);
+                expect(undoManager.undoLabel).toBe("Replace All Members");
+            });
+
+        });
+
+        describe("undoing", function () {
+
+            it("should perform all undo batch operations within the parent batch operation", function () {
+                roster.replaceAllMembers();
+                return undoManager.undo().then(function () {
+                    expect(roster.members.length).toBe(3);
+                    expect(roster.members[0]).toBe('Alice');
+                    expect(roster.members[1]).toBe('Bob');
+                    expect(roster.members[2]).toBe('Carol');
+                }).timeout(WAITS_FOR_TIMEOUT);
+            });
+
+        });
+
+        describe("redoing", function () {
+
+            it("should perform all batch redo operations within the parent batch operation", function () {
+                roster.replaceAllMembers();
+                return undoManager.undo().then(function () {
+                    return undoManager.redo();
+                }).then(function () {
+                        expect(roster.members.length).toBe(1);
+                        expect(roster.members[0]).toBe('Replacement');
+                    }).timeout(WAITS_FOR_TIMEOUT);
+            });
+
+            it("should perform all redo operations within a batch itself", function () {
+                roster.replaceAllMembers();
+                return undoManager.undo().then(function () {
+                    return undoManager.redo();
+                }).then(function () {
+                        expect(undoManager.undoCount).toBe(1);
+                        expect(undoManager.redoCount).toBe(0);
+                    }).timeout(WAITS_FOR_TIMEOUT);
+            });
+
+        });
+    });
+
+    describe("event", function () {
+        var listener;
+
+        beforeEach(function () {
+            listener = {
+                handleOperationRegistered: function () {},
+                handleUndo: function () {},
+                handleRedo: function () {}
+            };
+            undoManager.addEventListener("operationRegistered", listener, false);
+            undoManager.addEventListener("undo", listener, false);
+            undoManager.addEventListener("redo", listener, false);
+        });
+
+        it("operationRegistered is dispatched when an operation is added", function () {
+            spyOn(listener, "handleOperationRegistered");
+
+            return roster.addMember("Alice")
+            .then(function () {
+                expect(listener.handleOperationRegistered).toHaveBeenCalled();
+            });
+        });
+
+        it("operationRegistered is not dispatched when an operation is added as a result of an undo", function () {
+            return roster.addMember("Alice")
+            .then(function () {
+                spyOn(listener, "handleOperationRegistered");
+                return undoManager.undo();
+            })
+            .then(function () {
+                expect(listener.handleOperationRegistered).not.toHaveBeenCalled();
+            });
+        });
+
+        it("undo is dispatched when an undo is performed", function () {
+            return roster.addMember("Alice")
+            .then(function () {
+                spyOn(listener, "handleUndo");
+
+                return undoManager.undo();
+            })
+            .then(function () {
+                expect(listener.handleUndo).toHaveBeenCalled();
+            });
+        });
+
+        it("redo is dispatched when a redo is performed", function () {
+            return roster.addMember("Alice")
+            .then(function () {
+                return undoManager.undo();
+            })
+            .then(function () {
+                spyOn(listener, "handleRedo");
+                return undoManager.redo();
+            })
+            .then(function () {
+                expect(listener.handleRedo).toHaveBeenCalled();
+            });
+        });
+    });
 });

@@ -1,4 +1,248 @@
-# v0.12.0
+### v0.13.6
+
+-  **Montage**
+
+   Bump Mr version to 0.13.4. Fixes an issue caused by a Safari bug on the
+   very first load. Montage would not work at all because promises engine
+   couldn't work.
+
+-  **Template**
+
+   Fixed bug with relative url's not working in image and iframes elements.
+
+-  **NumberConverter**
+
+   New property "forceDecimals" that adds 0's to the decimal part of a number
+   to make sure it has the number of decimals specified in the "decimals"
+   property. It is set to `true` by default.
+
+-  **AbstractButton**
+
+   Fixed an issue with the `enabled` property that wouldn't be respected when
+   set to `false`.
+
+-  **TranslateComposer**
+
+   Added support to the standard `wheel` event. This was an issue in Firefox.
+
+-  **Blueprint**
+
+   Fixed a bug in the cardinality initialization.
+   Fixed a bug in the AbstractSelect blueprint.
+
+-  **Flow**
+
+   Fixed a bug in the Flow selection where an hidden iteration could become
+   deselected.
+
+-  **MediaController**
+
+   Overhaul change to the MediaController API.
+
+-  **AbstractVideo**
+
+   New abstract UI type - AbstractVideo - It provides an API and the base
+   code to implement a video ui widget. An example of its usage can be found
+   in the digit Video component.
+
+### v0.13.5
+
+-  **Flow**
+
+   Fixed a bug that was braking future usage of a TranslateComposer. If the
+   flow was the first component to be interacted with a slider (that uses the
+   TranslateComposer internally) wouldn't be able to slide.
+
+### v0.13.4
+
+-  **Montage**
+
+   window.Touch fix for desktop browsers (Chrome 29 in particular).
+
+-  **Template**
+
+   Fix templateDidLoad not being called on component templates with no
+   serialization.
+
+-  **Flow**
+
+   Fix flow animating without having the pointer.
+   Enhance mouse wheel heuristics.
+   Fix translateStart/End issues.
+
+-  **TextField**
+
+   Reject value change when user is editing.
+
+-  **Components**
+
+   Add AbstractToggleSwitch.
+
+### v0.13.3
+
+-  **Repetition**
+
+   Fix repetition to correctly add the `selected` class to iterations'
+   elements that are components too.
+
+-  **Overlay**
+
+   It enters and exists the document everytime it is shown or hidden.
+
+-  **AbstractSlider**
+
+   Add active state.
+   Add vertical mode.
+
+-  **AbstractTextArea**
+
+   Fix issue with null placeholder text.
+
+-  **Target**
+
+   Removed `willSurrenderActiveTarget` and added `surrendersActiveTarget`
+   that asks the target to surrender the activeTarget status.
+
+-  Several bug fixes
+
+### v0.13.2
+
+-   **Component**
+
+    Rename leaveDocument (mistake) to exitDocument
+
+-   **RangeController**
+
+    Check content exists before attempting to read contentConstructor
+
+-   **TreeController**
+
+    New APIs see dead18372cfdbce8238315f7e956c0f9c483ee36
+
+-   **Serialization**
+
+    Added 'module reference' type to be able to deserialize and require a CommonJS module.
+
+-   **Template**
+
+    Fixed an issue when using a 'clear' label in the serialization
+
+-   **Loader**
+
+    Better error reporting when missing/wrong 'main' module/object information
+
+-   **Repetition**
+
+    Fixed bugs in childComponents management so that they are properly cleaned up.
+
+    **Base Components**
+
+    Add delegate methods to AbstractTextField
+    Improvement to keyboard handling in AbstractNumberField
+
+-   **Flow**
+
+    Performance improvements.
+    Better support of Firefox/IE10
+
+-   **Documentation**
+
+    Improvements to the converter documentation.
+
+### v0.13.1
+
+-   **RangeController**
+
+    `addContent()` added to allow direct creation of objects in the content of the RangeController.
+    see `contentConstructor` to specify the type.
+
+-   **UndoManager**
+
+    UndoManager now accepts promises and batching.
+
+-   **Repetition**
+
+    Pressing on an already selected iteration now does nothing instead of toggling it.
+
+-   **Flow**
+
+    Flow is now positioned absolute so that it expands to fill all the available space.
+
+-   **AbstractSlider**
+
+    The slider now uses a translate3d to take advantage of gpu acceleration.
+
+## v0.13.0
+
+-   **Directory Structure**
+
+    All non-components have been moved from the ui directory to the core directory.
+    Composers have been moved to the root directory.
+
+-   **Core**
+
+    `Montage.create()` has been replaced by a `specialize` method on the constructor. The `specialize` method returns a constructor function that can be invoked with the `new` operator. (For details see
+    [Montage objects](http://montagejs.org/docs/montage-objects.html).)
+
+-   **FRB bindings**
+
+    Functional Reactive Bindings ([FRB](https://github.com/montagejs/frb)) have replaced the old bindings. [More info >](http://montagejs.org/docs/montage-%E2%99%A5-frb.html)
+
+-   **Component**
+
+    **Lifecycle methods**
+
+    (See also [Component draw cycle](http://montagejs.org/docs/component-draw-cycle.html).)
+    -   `enterDocument` is called every time the component's element is added to the DOM. When `enterDocument` is called the element is already in the DOM.
+        The first time `enterDocument` is called, a Boolean with value `true` is passed in. In this situation `enterDocument` replaces `prepareForDraw`.
+    -   `exitDocument` is called every time the component's element is removed from the DOM. When `exitDocument` is called the element is still in the DOM.
+    -   `dispose` is called when the component is discarded.
+
+    **classList**
+
+    Added a `classList` property to all component instances. You can use this property with the same API as the element's `classList` without impacting the draw cycle performance. The property can be used to great effect with FRB bindings to do things like: `classList.has('complete') <- @owner.isComplete`.
+
+    **DOM arguments**
+
+    Components can now receive DOM arguments. A DOM argument is specified in the component markup by adding a `data-arg` attribute and assign a name to its value.
+    DOM arguments can be referenced after the first `enterDocument` with the `extractDomArgument(name)` method.
+    When a component has a Template with parameters, each template parameter element is replaced with the corresponding component argument element.
+
+-   **Template**
+
+    Templates can now have DOM parameters. A DOM parameter is specified in a template using the `data-param` attribute on the DOM node that represents the parameter. `data-param` has the value of the parameter name.
+
+-   **Serialization**
+
+    A lot of the serialization code has been refactored to a separate project [mousse](https://github.com/montagejs/mousse) and made more generic.
+
+-   **Components**
+
+    The contents of the montage/ui directory have been split between the ui directories of the core montage framework and the [digit](https://github.com/montagejs/digit), [matte](https://github.com/montagejs/matte), and [native](https://github.com/montagejs/native) template packages.
+    The montage/ui directory now contains the following directories:
+    -   base (contains abstract components, described below)
+    -   condition.reel
+    -   flow.reel
+    -   loader.reel
+    -   [overlay.reel](http://montagejs.org/docs/overlay-component.html)
+    -   repetition.reel
+    -   slot.reel
+    -   [substitution.reel](http://montagejs.org/docs/substitution-component
+    .html)
+    -   text.reel (replaces dynamic-text.reel)
+    -   [component.js](#Component_v0130)
+
+
+    **Substitution**
+
+    The substitution's API has substantially changed to a template based approach that makes use of the new component arguments API.
+
+-   **Abstract components**
+
+    In an effort to make basic components easier to create and more consistent, the abstract components now provide a super
+    class that widget sets can specialize with their own template. This is how the [digit](https://github.com/montagejs/digit) widgets are implemented.
+
+## v0.12.0
 
 -   **Core**
 
@@ -102,7 +346,7 @@
 
     Sample application have been moved to individual repositories.
 
-# v0.11.0
+## v0.11.0
 
 -   **New skeleton components**
 
@@ -114,7 +358,7 @@
 
 -   **Better support of different document context in serialization**
 
-# v0.10.0
+## v0.10.0
 
 -   **New property change API**
 
@@ -162,7 +406,7 @@
     element, clearing any existing content.
 
 
-# v0.9.0
+## v0.9.0
 
 -   **Draw  cycle changes**
 
@@ -194,7 +438,7 @@
     Backwards compatibility for id attribute based references in serilization is removed, you should now use the
     data-montage-id attribute.
 
-# v0.8.0
+## v0.8.0
 
 -   **Data binding shorthand in serializations**
 
@@ -279,7 +523,7 @@
         property has no effect on modal popups.
 
 
-# v0.7.0
+## v0.7.0
 
 -   **Adding `ownerComponent` property to the Component.**
     When the template is deserialized we populate the ownerComponent property of any component created within it's
@@ -341,7 +585,7 @@
     -   Better support for Firefox
     -   Better support for Opera
 
-# v0.6.0
+## v0.6.0
 
 -   Native Controls based on HTML5 input elements
 -   Composers to add aggregate events and time dependent behaviors as is needed for scroll momentum and bouncing.
@@ -349,7 +593,7 @@
 -   Condition Component API improvements to lazily load parts of your component tree and easily show or hide sections of your page.
 -   Misc bug fixes and optimizations mostly in the loading of the app and the require/package system..
 
-# v0.5.0
+## v0.5.0
 
 -   Added UndoManager.
     It stores actions that can later be undone or re-done,
@@ -379,7 +623,7 @@
     -   Scrollview
     -   Various other areas
 
-# v0.4.0
+## v0.4.0
 
 -   Packaging:
     -   All applications must be packages with ``package.json`` files.
@@ -443,7 +687,7 @@
     updated to either use the needed prototype directly or use
     ``Object.getPrototypeOf(...)``
 
-# v0.3.1
+### v0.3.1
 
 -   Added copyright notices to HTML, CSS, and JavaScript.
 -   Normalized files to Unix text encoding.
@@ -452,11 +696,11 @@
 -   Draw cycle improvements.
 -   Checkbox animations.
 
-# v0.3.0
+## v0.3.0
 
 -   Module namespace restructured.
 
-# v0.2.0
+## v0.2.0
 
 -   First version before breaking changes.
 -   New serialization format introduced.

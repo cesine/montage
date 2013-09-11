@@ -8,7 +8,7 @@
  */
 var Montage = require("montage").Montage;
 var Promise = require("core/promise").Promise;
-var Deserializer = require("core/deserializer").Deserializer;
+var Deserializer = require("core/serialization").Deserializer;
 var ObjectProperty = require("core/meta/object-property").ObjectProperty;
 var Enum = require("core/enum").Enum;
 var BinderModule = require("core/meta/binder");
@@ -16,55 +16,55 @@ var BlueprintReference = require("core/meta/blueprint-reference").BlueprintRefer
 var PropertyBlueprint = require("core/meta/property-blueprint").PropertyBlueprint;
 var AssociationBlueprint = require("core/meta/association-blueprint").AssociationBlueprint;
 var DerivedPropertyBlueprint = require("core/meta/derived-property-blueprint").DerivedPropertyBlueprint;
+var EventBlueprint = require("core/meta/event-blueprint").EventBlueprint;
 var PropertyValidationRule = require("core/meta/validation-rule").PropertyValidationRule;
 
 var logger = require("core/logger").logger("blueprint");
 
-
 var Defaults = {
     name:"default",
-    moduleId:"",
-    prototypeName:"",
     customPrototype:false
 };
 
 /**
- @class module:montage/core/meta/blueprint.Blueprint
+ @class Blueprint
  */
-var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:montage/core/meta/blueprint.Blueprint# */ {
+var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */ {
 
     FileExtension: {
-        value: "-blueprint.json"
+        value: ".meta"
     },
 
-    /**
-     Description TODO
-     @function
-     @param {String} name TODO
-     @returns this.initWithNameAndModuleId(name, null)
-     */
-    initWithName: {
-        value: function(name) {
-            return this.initWithNameAndModuleId(name, null);
+    constructor: {
+        value: function Blueprint() {
+            this.super();
         }
     },
 
     /**
-     Description TODO
+     @function
+     @param {String} name The name of the blueprint
+     @returns this
+     */
+    initWithName: {
+        value: function(name) {
+            this._name = (name !== null ? name : "default");
+            this.customPrototype = false;
+
+            return this;
+        }
+    },
+
+    /**
      @function
      @param {String} name TODO
      @param {String} moduleId TODO
      @returns itself
      */
     initWithNameAndModuleId: {
-        value: function(name, moduleId) {
-            this._name = (name !== null ? name : "default");
-            // The default is that the prototype name is the name
-            this.prototypeName = this.name;
-            this.moduleId = moduleId;
-            this.customPrototype = false;
-            return this;
-        }
+        value: Montage.deprecate(void 0, function (name) {
+            return this.initWithName(name);
+        }, "Blueprint#initWithNameAndModuleId", "ModuleBlueprint#initWithModuleAndExportName")
     },
 
     serializeSelf:{
@@ -73,15 +73,14 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
             if ((this._binder) && (!this.binder.isDefault)) {
                 serializer.setProperty("binder", this._binder, "reference");
             }
-            serializer.setProperty("blueprintModuleId", this.blueprintInstanceModuleId);
+
+            if (this.blueprintInstanceModule) {
+                serializer.setProperty("blueprintModule", this.blueprintInstanceModule);
+            }
             if (this._parentReference) {
                 serializer.setProperty("parent", this._parentReference);
             }
-            //  moduleId,prototypeName,customPrototype
-            this._setPropertyWithDefaults(serializer, "moduleId", this.moduleId);
-            if (this.prototypeName === this.name) {
-                this._setPropertyWithDefaults(serializer, "prototypeName", this.prototypeName);
-            }
+
             this._setPropertyWithDefaults(serializer, "customPrototype", this.customPrototype);
             //
             if (this._propertyBlueprints.length > 0) {
@@ -89,6 +88,9 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
             }
             if (Object.getOwnPropertyNames(this._propertyBlueprintGroups).length > 0) {
                 serializer.setProperty("propertyBlueprintGroups", this._propertyBlueprintGroups);
+            }
+            if (this._eventBlueprints.length > 0) {
+                serializer.setProperty("eventBlueprints", this._eventBlueprints);
             }
             if (this._propertyValidationRules.length > 0) {
                 serializer.setProperty("propertyValidationRules", this._propertyValidationRules);
@@ -103,14 +105,9 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
             if (binder) {
                 this._binder = binder;
             }
-            this.blueprintInstanceModuleId = deserializer.getProperty("blueprintModuleId");
+            this.blueprintInstanceModule = deserializer.getProperty("blueprintModule");
             this._parentReference = deserializer.getProperty("parent");
-            //  moduleId,prototypeName,customPrototype
-            this.moduleId = this._getPropertyWithDefaults(deserializer, "moduleId");
-            this.prototypeName = this._getPropertyWithDefaults(deserializer, "prototypeName");
-            if (this.prototypeName === "") {
-                this.prototypeName = this.name;
-            }
+
             this.customPrototype = this._getPropertyWithDefaults(deserializer, "customPrototype");
             //
             var value;
@@ -121,6 +118,10 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
             value = deserializer.getProperty("propertyBlueprintGroups");
             if (value) {
                 this._propertyBlueprintGroups = value;
+            }
+            value = deserializer.getProperty("eventBlueprints");
+            if (value) {
+                this._eventBlueprints = value;
             }
             value = deserializer.getProperty("propertyValidationRules");
             if (value) {
@@ -172,15 +173,15 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
      */
     create: {
         value: function(aPrototype, propertyDescriptor) {
-            if ((typeof aPrototype === "undefined") || (Blueprint.isPrototypeOf(aPrototype))) {
+            if ((typeof aPrototype === "undefined") || (Blueprint.prototype.isPrototypeOf(aPrototype))) {
                 var parentCreate = Object.getPrototypeOf(Blueprint).create;
                 return parentCreate.call(this, (typeof aPrototype === "undefined" ? this : aPrototype), propertyDescriptor);
             }
-            var newPrototype = Montage.create(aPrototype, propertyDescriptor);
-            this.ObjectProperty.applyWithBlueprint(newPrototype, this);
+            var newConstructor = Montage.create(aPrototype, propertyDescriptor);
+            this.ObjectProperty.applyWithBlueprint(newConstructor.prototype, this);
             // We have just created a custom prototype lets use it.
             this.customPrototype = true;
-            return newPrototype;
+            return newConstructor;
         }
     },
 
@@ -192,7 +193,7 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
     newInstance: {
         value: function() {
             var prototype = this.newInstancePrototype();
-            return (prototype ? prototype.create() : null);
+            return (prototype ? new prototype() : null);
         }
     },
 
@@ -204,8 +205,10 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
      */
     newInstancePrototype: {
         value: function() {
+            // FIXME this function is no missing all the data it needs
             var self = this;
             if (this.customPrototype) {
+                throw new Error("FIXME");
                 var results = Promise.defer();
                 require.async(this.moduleId,
                     function(exports) {
@@ -217,21 +220,18 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
                     }
                 );
             } else {
-                if (typeof exports[self.prototypeName] === "undefined") {
-                    var parentInstancePrototype = (this.parent ? this.parent.newInstancePrototype() : Montage );
-                    var newPrototype = Montage.create(parentInstancePrototype, {
-                        // Token class
-                        init: {
-                            value: function() {
-                                return this;
-                            }
+                var parentInstancePrototype = (this.parent ? this.parent.newInstancePrototype() : Montage );
+                var newConstructor = Montage.create(parentInstancePrototype, {
+                    // Token class
+                    init: {
+                        value: function() {
+                            return this;
                         }
-                    });
-                    this.ObjectProperty.applyWithBlueprint(newPrototype, this);
-                    exports[self.prototypeName] = newPrototype;
-                }
-                var prototype = exports[self.prototypeName];
-                return (prototype ? prototype : null);
+                    }
+                });
+                this.ObjectProperty.applyWithBlueprint(newConstructor.prototype, this);
+
+                return (newConstructor ? newConstructor : null);
             }
         }
     },
@@ -257,94 +257,17 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
     /*
      * This is used for references only so that we can reload referenced blueprints
      */
-    blueprintInstanceModuleId: {
+    blueprintInstanceModule: {
         serializable: false,
         value: null
     },
 
-    /**
-     Gets a blueprint from a serialized file at the given module id.
-     @function
-     @param {String} blueprint module id
-     @param {Function} require function
-     */
-    getBlueprintWithModuleId: {
-        value: function(blueprintModuleId, require) {
-            var deferredBlueprint = Promise.defer();
-            var targetRequire = require;
-            if (!targetRequire) {
-                // This is probably wrong but at least we will try
-                targetRequire = this.require;
-            }
-
-            targetRequire.async(blueprintModuleId).then(function(object) {
-                try {
-                    Deserializer.create().initWithObjectAndRequire(object, targetRequire, blueprintModuleId).deserializeObject(function(blueprint) {
-                        if (blueprint) {
-                            var binder = (blueprint._binder ? blueprint._binder : BinderModule.Binder.manager.defaultBinder); // We do not want to trigger the auto registration
-                            var existingBlueprint = binder.blueprintForPrototype(blueprint.prototypeName, blueprint.moduleId);
-                            if (existingBlueprint) {
-                                deferredBlueprint.resolve(existingBlueprint);
-                            } else {
-                                binder.addBlueprint(blueprint);
-                                blueprint.blueprintInstanceModuleId = blueprintModuleId;
-                                if (blueprint._parentReference) {
-                                    // We need to grab the parent before we return or most operation will fail
-                                    blueprint._parentReference.promise(targetRequire).then(function(parentBlueprint) {
-                                            blueprint._parent = parentBlueprint;
-                                            deferredBlueprint.resolve(blueprint);
-                                        }
-                                    );
-                                } else {
-                                    deferredBlueprint.resolve(blueprint);
-                                }
-                            }
-                        } else {
-                            deferredBlueprint.reject(new Error("No Blueprint found " + blueprintModuleId));
-                        }
-                    }, targetRequire);
-                } catch (exception) {
-                    deferredBlueprint.reject(new Error("Error deserializing Blueprint " + blueprintModuleId + " " + JSON.stringfy(exception)));
-                }
-            }, deferredBlueprint.reject);
-
-            return deferredBlueprint.promise;
-        }
-    },
-
-    /*
-     * Creates a default blueprint with all enumerable properties.
-     * <b>Note</b>Value type are set to the string default.
-     */
-    createDefaultBlueprintForObject:{
-        value:function (object) {
-            if (object) {
-                var target = Montage.getInfoForObject(object).isInstance ? Object.getPrototypeOf(object) : object;
-                var info = Montage.getInfoForObject(target);
-                var newBlueprint = Blueprint.create().initWithNameAndModuleId(info.objectName, info.moduleId);
-                for (var name in target) {
-                    if ((name.charAt(0) !== "_") && (target.hasOwnProperty(name))) {
-                        // We don't want to list private properties
-                        var value = target[name];
-                        var propertyBlueprint;
-                        if (Array.isArray(value)) {
-                            propertyBlueprint = newBlueprint.addToManyPropertyBlueprintNamed(name);
-                        } else {
-                            propertyBlueprint = newBlueprint.addToOnePropertyBlueprintNamed(name);
-                        }
-                        newBlueprint.addPropertyBlueprintToGroupNamed(propertyBlueprint, info.objectName);
-                    }
-                }
-                var parentObject = Object.getPrototypeOf(target);
-                if ("blueprint" in parentObject) {
-                    parentObject.blueprint.then(function (blueprint) {
-                        newBlueprint.parent = blueprint;
-                    })
-                }
-                return newBlueprint;
-            } else {
-                return UnknownBlueprint;
-            }
+    blueprintInstanceModuleId: {
+        get: function () {
+            throw new Error("blueprintInstanceModuleId is deprecated, use blueprintInstanceModule instead");
+        },
+        set: function () {
+            throw new Error("blueprintInstanceModuleId is deprecated, use blueprintInstanceModule instead");
         }
     },
 
@@ -359,7 +282,7 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
             // TODO convert UpperCase to lower-case instead of lowercase
             return [
                 "blueprint",
-                this.name.toLowerCase()
+                (this.name || "unnamed").toLowerCase()
             ].join("_");
         }
     },
@@ -372,7 +295,6 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
     },
 
     /**
-     Description TODO
      @type {Property}
      @default null
      */
@@ -416,7 +338,7 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
         },
         set: function(blueprint) {
             if (blueprint) {
-                this._parentReference = BlueprintReference.create().initWithValue(blueprint);
+                this._parentReference = new BlueprintReference().initWithValue(blueprint);
                 this._parent = blueprint;
             } else {
                 this._parentReference = null;
@@ -426,21 +348,29 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
     },
 
     /**
-     Description TODO
      @type {Property}
      @default null
      */
     moduleId: {
-        value: ""
+        get: function () {
+            throw new Error("Blueprint#moduleId is deprecated, use ModuleBlueprint#module instead");
+        },
+        set: function () {
+            throw new Error("Blueprint#moduleId is deprecated, use ModuleBlueprint#module instead");
+        }
     },
 
     /**
-     Description TODO
      @type {Property}
      @default null
      */
     prototypeName: {
-        value: null
+        get: function () {
+            throw new Error("Blueprint#prototypeName is deprecated, use ModuleBlueprint#exportName instead");
+        },
+        set: function () {
+            throw new Error("Blueprint#prototypeName is deprecated, use ModuleBlueprint#exportName instead");
+        }
     },
 
     /**
@@ -454,7 +384,6 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
     },
 
     /**
-     Description TODO
      @type {Property}
      @default {Array} new Array()
      */
@@ -464,7 +393,6 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
     },
 
     /**
-     Description TODO
      @type {Property}
      @default {Array} new Array()
      */
@@ -480,7 +408,6 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
     },
 
     /**
-     Description TODO
      @private
      */
     _propertyBlueprintsTable: {
@@ -541,7 +468,7 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
      */
     newPropertyBlueprint: {
         value: function(name, cardinality) {
-            return PropertyBlueprint.create().initWithNameBlueprintAndCardinality(name, this, cardinality);
+            return new PropertyBlueprint().initWithNameBlueprintAndCardinality(name, this, cardinality);
         }
     },
 
@@ -553,7 +480,7 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
      */
     newAssociationBlueprint: {
         value: function(name, cardinality) {
-            return AssociationBlueprint.create().initWithNameBlueprintAndCardinality(name, this, cardinality);
+            return new AssociationBlueprint().initWithNameBlueprintAndCardinality(name, this, cardinality);
         }
     },
 
@@ -565,7 +492,7 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
      */
     newDerivedPropertyBlueprint: {
         value: function(name, cardinality) {
-            return DerivedPropertyBlueprint.create().initWithNameBlueprintAndCardinality(name, this, cardinality);
+            return new DerivedPropertyBlueprint().initWithNameBlueprintAndCardinality(name, this, cardinality);
         }
     },
 
@@ -630,7 +557,6 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
     },
 
     /**
-     Description TODO
      @function
      @param {String} name TODO
      @returns property blueprint
@@ -695,7 +621,7 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
             if ((! group) && (this.parent)) {
                 group = this.parent.propertyBlueprintGroupForName(groupName);
             }
-            return (group != null ? group : []);
+            return group;
         }
     },
 
@@ -774,6 +700,140 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
         }
     },
 
+
+    /**
+     @type {Property}
+     @default {Array} new Array()
+     */
+    _eventBlueprints: {
+        value: [],
+        distinct: true
+    },
+
+    /**
+     @type {Property}
+     @default {Array} new Array()
+     */
+    eventBlueprints: {
+        get: function() {
+            var eventBlueprints = [];
+            eventBlueprints = eventBlueprints.concat(this._eventBlueprints);
+            if (this.parent) {
+                eventBlueprints = eventBlueprints.concat(this.parent.eventBlueprints);
+            }
+            return eventBlueprints;
+        }
+    },
+
+    /**
+     @private
+     */
+    _eventBlueprintsTable: {
+        value: {},
+        distinct: true,
+        writable: false
+    },
+
+
+    /**
+     Add a new property blueprint to this blueprint.<br>
+     If that property blueprint was associated with another blueprint it will be removed first.
+     @function
+     @param {String} property blueprint The property blueprint to be added.
+     @returns property blueprint
+     */
+    addEventBlueprint: {
+        value: function(eventBlueprint) {
+            if (eventBlueprint !== null && eventBlueprint.name !== null) {
+                var index = this._eventBlueprints.indexOf(eventBlueprint);
+                if (index < 0) {
+                    if ((eventBlueprint.owner !== null) && (eventBlueprint.owner !== this)) {
+                        eventBlueprint.owner.removeEventBlueprint(eventBlueprint);
+                    }
+                    this._eventBlueprints.push(eventBlueprint);
+                    this._eventBlueprintsTable[eventBlueprint.name] = eventBlueprint;
+                    eventBlueprint._owner = this;
+                }
+            }
+            return eventBlueprint;
+        }
+    },
+
+    /**
+     Removes an property blueprint from the property blueprint list of this blueprint.
+     @function
+     @param {Object} property blueprint The property blueprint to be removed.
+     @returns property blueprint
+     */
+    removeEventBlueprint: {
+        value: function(eventBlueprint) {
+            if (eventBlueprint !== null && eventBlueprint.name !== null) {
+                var index = this._eventBlueprints.indexOf(eventBlueprint);
+                if (index >= 0) {
+                    this._eventBlueprints.splice(index, 1);
+                    delete this._eventBlueprintsTable[eventBlueprint.name];
+                    eventBlueprint._owner = null;
+                }
+            }
+            return eventBlueprint;
+        }
+    },
+
+    /**
+     * Return a new event blueprint.<br/>
+     * <b>Note: </b> This is the canonical way of creating new event blueprint in order to enable subclassing.
+     * @param {String} name name of the event blueprint to create
+     */
+    newEventBlueprint: {
+        value: function(name) {
+            return new EventBlueprint().initWithNameAndBlueprint(name, this);
+        }
+    },
+
+
+    /**
+     Convenience to add an event blueprint.
+     @function
+     @param {String} name TODO
+     @returns relationship
+     */
+    addEventBlueprintNamed: {
+        value: function(name, inverse) {
+            return this.addEventBlueprint(this.newEventBlueprint(name));
+        }
+    },
+
+    /**
+     @function
+     @param {String} name TODO
+     @returns event blueprint
+     */
+    eventBlueprintForName: {
+        value: function(name) {
+            var eventBlueprint = this._eventBlueprintsTable[name];
+            if (typeof eventBlueprint === "undefined") {
+                eventBlueprint = UnknownEventBlueprint;
+                var anEventBlueprint, index;
+                for (index = 0; typeof (anEventBlueprint = this._eventBlueprints[index]) !== "undefined"; index++) {
+                    if (anEventBlueprint.name === name) {
+                        eventBlueprint = anEventBlueprint;
+                        break;
+                    }
+                }
+                this._eventBlueprintsTable[name] = eventBlueprint;
+            }
+            if (eventBlueprint === UnknownEventBlueprint) {
+                eventBlueprint = null;
+            }
+            if ((! eventBlueprint) && (this.parent)) {
+                eventBlueprint = this.parent.eventBlueprintForName(name);
+            }
+            return eventBlueprint;
+        }
+
+    },
+
+
     /**
      * @private
      */
@@ -805,7 +865,7 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
      */
     propertyValidationRuleForName: {
         value: function(name) {
-            var propertyValidationRule = his._propertyValidationRules[name];
+            var propertyValidationRule = this._propertyValidationRules[name];
             if ((! propertyValidationRule) && (this.parent)) {
                 propertyValidationRule = this.parent.propertyValidationRuleForName(name);
             }
@@ -823,7 +883,7 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
         value: function(name) {
             var propertyValidationRule = this._propertyValidationRules[name];
             if (propertyValidationRule == null) {
-                propertyValidationRule = PropertyValidationRule.create().initWithNameAndBlueprint(name, this);
+                propertyValidationRule = new PropertyValidationRule().initWithNameAndBlueprint(name, this);
                 this._propertyValidationRules[name] = propertyValidationRule;
             }
             return propertyValidationRule;
@@ -869,8 +929,56 @@ var Blueprint = exports.Blueprint = Montage.create(Montage, /** @lends module:mo
     blueprint:require("montage")._blueprintDescriptor
 
 
+}, {
+
+    getBlueprintWithModuleId: {
+        value: Montage.deprecate(void 0, function (moduleId, _require) {
+            return require("./module-blueprint").ModuleBlueprint.getBlueprintWithModuleId(moduleId, _require);
+        }, "Blueprint.getBlueprintWithModuleId", "ModuleBlueprint.getBlueprintWithModuleId")
+    },
+
+    /*
+     * Creates a default blueprint with all enumerable properties.
+     * <b>Note</b>Value type are set to the string default.
+     */
+    createDefaultBlueprintForObject:{
+        value:function (object) {
+            if (object) {
+                var target = Montage.getInfoForObject(object).isInstance ? Object.getPrototypeOf(object) : object;
+                var info = Montage.getInfoForObject(target);
+
+                // Create `new this()` so that subclassing works
+                var newBlueprint = new this();
+
+                for (var name in target) {
+                    if ((name.charAt(0) !== "_") && (target.hasOwnProperty(name))) {
+                        // We don't want to list private properties
+                        var value = target[name];
+                        var propertyBlueprint;
+                        if (Array.isArray(value)) {
+                            propertyBlueprint = newBlueprint.addToManyPropertyBlueprintNamed(name);
+                        } else {
+                            propertyBlueprint = newBlueprint.addToOnePropertyBlueprintNamed(name);
+                        }
+                        newBlueprint.addPropertyBlueprintToGroupNamed(propertyBlueprint, info.objectName);
+                    }
+                }
+                var parentObject = Object.getPrototypeOf(target);
+                if (parentObject && "blueprint" in parentObject) {
+                    return parentObject.blueprint.then(function (blueprint) {
+                        newBlueprint.parent = blueprint;
+                        return newBlueprint;
+                    });
+                } else {
+                    return Promise.resolve(newBlueprint);
+                }
+            } else {
+                return Promise.resolve(UnknownBlueprint);
+            }
+        }
+    }
 });
-var UnknownBlueprint = Object.freeze(Blueprint.create().initWithName("Unknown"));
+var UnknownBlueprint = Object.freeze(new Blueprint().initWithName("Unknown"));
 
-var UnknownPropertyBlueprint = Object.freeze(PropertyBlueprint.create().initWithNameBlueprintAndCardinality("Unknown", null, 1));
-
+var UnknownPropertyBlueprint = Object.freeze(new PropertyBlueprint().initWithNameBlueprintAndCardinality("Unknown", null, 1));
+var UnknownEventBlueprint = Object.freeze(new EventBlueprint().initWithNameAndBlueprint("Unknown", null));

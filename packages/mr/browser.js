@@ -3,7 +3,8 @@
  No rights, expressed or implied, whatsoever to this software are provided by Motorola Mobility, Inc. hereunder.<br/>
  (c) Copyright 2012 Motorola Mobility, Inc.  All Rights Reserved.
  </copyright> */
-/*global bootstrap */
+/*global bootstrap,montageDefine:true */
+/*jshint -W015, evil:true, camelcase:false */
 bootstrap("require/browser", function (require) {
 
 var Require = require("require");
@@ -90,10 +91,12 @@ var __FILE__String = "__FILE__",
 
 Require.Compiler = function (config) {
     return function(module) {
-        if (module.factory || module.text === void 0)
+        if (module.factory || module.text === void 0) {
             return module;
-        if (config.useScriptInjection)
+        }
+        if (config.useScriptInjection) {
             throw new Error("Can't use eval.");
+        }
 
         // Here we use a couple tricks to make debugging better in various browsers:
         // TODO: determine if these are all necessary / the best options
@@ -118,7 +121,7 @@ Require.Compiler = function (config) {
         // module.factory = new Function("require", "exports", "module", module.text + "\n//*/"+sourceURLComment);
 
         module.factory.displayName = displayName;
-    }
+    };
 };
 
 Require.XhrLoader = function (config) {
@@ -138,6 +141,27 @@ var getDefinition = function (hash, id) {
     definitions[hash][id] = definitions[hash][id] || Promise.defer();
     return definitions[hash][id];
 };
+
+var loadIfNotPreloaded = function (location, definition, preloaded) {
+    // The package.json might come in a preloading bundle. If so, we do not
+    // want to issue a script injection. However, if by the time preloading
+    // has finished the package.json has not arrived, we will need to kick off
+    // a request for the requested script.
+    if (preloaded && preloaded.isPending()) {
+        preloaded
+        .then(function () {
+            if (definition.isPending()) {
+                Require.loadScript(location);
+            }
+        })
+        .done();
+    } else if (definition.isPending()) {
+        // otherwise preloading has already completed and we don't have the
+        // module, so load it
+        Require.loadScript(location);
+    }
+};
+
 // global
 montageDefine = function (hash, id, module) {
     getDefinition(hash, id).resolve(module);
@@ -172,17 +196,20 @@ Require.ScriptLoader = function (config) {
                 location += ".load.js";
             }
 
-            Require.loadScript(location);
+            var definition = getDefinition(hash, module.id).promise;
+            loadIfNotPreloaded(location, definition, config.preloaded);
 
-            return getDefinition(hash, module.id).promise;
+            return definition;
         })
         .then(function (definition) {
+            /*jshint -W089 */
             delete definitions[hash][module.id];
             for (var name in definition) {
                 module[name] = definition[name];
             }
             module.location = location;
             module.directory = URL.resolve(location, ".");
+            /*jshint +W089 */
         });
     };
 };
@@ -192,20 +219,9 @@ var loadPackageDescription = Require.loadPackageDescription;
 Require.loadPackageDescription = function (dependency, config) {
     if (dependency.hash) { // use script injection
         var definition = getDefinition(dependency.hash, "package.json").promise;
-        // the package.json might come in a preloading bundle.  if so, we do not
-        // want to issue a script injection.  however, if by the time preloading
-        // has finished the package.json has not arrived, we will need to kick off
-        // a request for the package.json.load.js script.
-        if (config.preloaded.isPending()) {
-            config.preloaded
-            .then(function (result) {
-                if (definition.isPending()) {
-                    var location = URL.resolve(dependency.location, "package.json.load.js");
-                    Require.loadScript(location);
-                }
-            })
-            .done();
-        }
+        var location = URL.resolve(dependency.location, "package.json.load.js");
+
+        loadIfNotPreloaded(location, definition, config.preloaded);
 
         return definition.get("exports");
     } else {

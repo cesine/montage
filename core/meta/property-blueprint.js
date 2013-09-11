@@ -11,8 +11,8 @@ var Enum = require("core/enum").Enum;
 
 var logger = require("core/logger").logger("blueprint");
 
-var ValueType = Enum.create().initWithMembers("string", "number", "boolean", "date", "enum", "url", "object");
-var CollectionValueType = Enum.create().initWithMembers("list", "set", "map");
+var ValueType = new Enum().initWithMembers("string", "number", "boolean", "date", "enum", "url", "object");
+var CollectionValueType = new Enum().initWithMembers("list", "set", "map");
 
 var Defaults = {
     name:"default",
@@ -21,7 +21,7 @@ var Defaults = {
     readOnly:false,
     denyDelete:false,
     valueType:"string",
-    colectionValueType:"list",
+    collectionValueType:"list",
     valueObjectPrototypeName:"",
     valueObjectModuleId:"",
     enumValues:[],
@@ -29,9 +29,15 @@ var Defaults = {
 };
 
 /**
- @class module:montage/core/meta/property-blueprint.PropertyBlueprint
+ @class PropertyBlueprint
  */
-exports.PropertyBlueprint = Montage.create(Montage, /** @lends module:montage/core/meta/property-blueprint.PropertyBlueprint# */ {
+exports.PropertyBlueprint = Montage.specialize( /** @lends PropertyBlueprint# */ {
+
+    constructor: {
+        value: function PropertyBlueprint() {
+            this.super();
+        }
+    },
 
     /**
      Initialize a newly allocated property blueprint.
@@ -45,7 +51,7 @@ exports.PropertyBlueprint = Montage.create(Montage, /** @lends module:montage/co
         value:function (name, blueprint, cardinality) {
             this._name = (name !== null ? name : Defaults["name"]);
             this._owner = blueprint;
-            this._cardinality = (cardinality > 0 ? cardinality : Defaults["cardinality"]);
+            this.cardinality = (cardinality > 0 ? cardinality : Defaults["cardinality"]);
             return this;
         }
     },
@@ -63,7 +69,7 @@ exports.PropertyBlueprint = Montage.create(Montage, /** @lends module:montage/co
             this._setPropertyWithDefaults(serializer, "readOnly", this.readOnly);
             this._setPropertyWithDefaults(serializer, "denyDelete", this.denyDelete);
             this._setPropertyWithDefaults(serializer, "valueType", this.valueType);
-            this._setPropertyWithDefaults(serializer, "colectionValueType", this.colectionValueType);
+            this._setPropertyWithDefaults(serializer, "collectionValueType", this.collectionValueType);
             this._setPropertyWithDefaults(serializer, "valueObjectPrototypeName", this.valueObjectPrototypeName);
             this._setPropertyWithDefaults(serializer, "valueObjectModuleId", this.valueObjectModuleId);
             if (this.enumValues.length > 0) {
@@ -77,15 +83,15 @@ exports.PropertyBlueprint = Montage.create(Montage, /** @lends module:montage/co
         value:function (deserializer) {
             this._name = deserializer.getProperty("name");
             this._owner = deserializer.getProperty("blueprint");
-            this._cardinality = this._getPropertyWithDefaults(deserializer, "cardinality");
-            if (this._cardinality === -1) {
-                this._cardinality = Infinity;
+            this.cardinality = this._getPropertyWithDefaults(deserializer, "cardinality");
+            if (this.cardinality === -1) {
+                this.cardinality = Infinity;
             }
             this.mandatory = this._getPropertyWithDefaults(deserializer, "mandatory");
             this.readOnly = this._getPropertyWithDefaults(deserializer, "readOnly");
             this.denyDelete = this._getPropertyWithDefaults(deserializer, "denyDelete");
             this.valueType = this._getPropertyWithDefaults(deserializer, "valueType");
-            this.colectionValueType = this._getPropertyWithDefaults(deserializer, "colectionValueType");
+            this.collectionValueType = this._getPropertyWithDefaults(deserializer, "collectionValueType");
             this.valueObjectPrototypeName = this._getPropertyWithDefaults(deserializer, "valueObjectPrototypeName");
             this.valueObjectModuleId = this._getPropertyWithDefaults(deserializer, "valueObjectModuleId");
             this.enumValues = this._getPropertyWithDefaults(deserializer, "enumValues");
@@ -160,14 +166,6 @@ exports.PropertyBlueprint = Montage.create(Montage, /** @lends module:montage/co
     },
 
     /**
-     Description TODO
-     @private
-     */
-    _cardinality:{
-        value:Defaults["cardinality"]
-    },
-
-    /**
      Cardinality of the property blueprint.<br/>
      The Cardinality of an property blueprint is the number of values that can be stored.
      A cardinality of one means that only one object can be stored. Only positive values are legal. A value of infinity means that any number of values can be stored.
@@ -175,13 +173,10 @@ exports.PropertyBlueprint = Montage.create(Montage, /** @lends module:montage/co
      @default {Number} 1
      */
     cardinality:{
-        get:function () {
-            return this._cardinality;
-        }
+        value:Defaults["cardinality"]
     },
 
     /**
-     Description TODO
      @type {Property}
      @default {Boolean} false
      */
@@ -190,7 +185,6 @@ exports.PropertyBlueprint = Montage.create(Montage, /** @lends module:montage/co
     },
 
     /**
-     Description TODO
      @type {Property}
      @default {Boolean} false
      */
@@ -199,7 +193,6 @@ exports.PropertyBlueprint = Montage.create(Montage, /** @lends module:montage/co
     },
 
     /**
-     Description TODO
      @type {Property}
      @default {Boolean} false
      */
@@ -208,7 +201,6 @@ exports.PropertyBlueprint = Montage.create(Montage, /** @lends module:montage/co
     },
 
     /**
-     Description TODO
      @type {Property}
      @default {Boolean} false
      */
@@ -219,18 +211,17 @@ exports.PropertyBlueprint = Montage.create(Montage, /** @lends module:montage/co
     },
 
     /**
-     Description TODO
+     Returns true if the cardinality is more than one.
      @type {Property}
      @default {Boolean} false
      */
     isToMany:{
         get:function () {
-            return this.cardinality > 1;
+            return this.cardinality === Infinity || this.cardinality > 1;
         }
     },
 
     /**
-     Description TODO
      @type {Property}
      @default {Boolean} false
      */
@@ -241,7 +232,6 @@ exports.PropertyBlueprint = Montage.create(Montage, /** @lends module:montage/co
     },
 
     /**
-     Description TODO
      @type {Property}
      @default {String} "string"
      */
@@ -250,16 +240,14 @@ exports.PropertyBlueprint = Montage.create(Montage, /** @lends module:montage/co
     },
 
     /**
-     Description TODO
      @type {Property}
      @default {String} "string"
      */
-    colectionValueType:{
-        value:Defaults["colectionValueType"]
+    collectionValueType:{
+        value:Defaults["collectionValueType"]
     },
 
     /**
-     Description TODO
      @type {Property}
      @default {Object} null
      */
@@ -268,7 +256,6 @@ exports.PropertyBlueprint = Montage.create(Montage, /** @lends module:montage/co
     },
 
     /**
-     Description TODO
      @type {Property}
      @default {Object} null
      */
