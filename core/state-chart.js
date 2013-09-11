@@ -35,15 +35,22 @@ POSSIBILITY OF SUCH DAMAGE.
 var Montage = require("montage").Montage;
 
 /**
-    @class module:montage/core/state-chart.State
-    @extends module:montage/core/core.Montage
+    @class State
+    @extends Montage
 */
-var State = exports.State = Montage.create(Montage, /** @lends module:montage/core/state-chart.State# */{
+var State = exports.State = Montage.specialize( /** @lends State# */{
 
     _stateChart: {
         enumerable: false,
         value: null
     },
+
+    constructor: {
+        value: function State() {
+            this.super();
+        }
+    },
+
 /**
     Initializes a State object with a set of options.
     @function
@@ -65,8 +72,8 @@ var State = exports.State = Montage.create(Montage, /** @lends module:montage/co
             for (; (iKey = keys[i]); i++) {
 
                 iOption = options[iKey];
+                if (typeof iOption === "object" && State.prototype.isPrototypeOf(iOption)) {
 
-                if (iOption.prototype === State.prototype) {
                     iOption.name = iKey;
                     iOption.parentState = this;
                     this.substates[iKey] = iOption;
@@ -245,9 +252,9 @@ var State = exports.State = Montage.create(Montage, /** @lends module:montage/co
 
 });
 /**
-    @class module:montage/core/state-chart.StateChart
+    @class StateChart
 */
-var StateChart = exports.StateChart = Montage.create(Montage,/** @lends module:montage/core/state-chart.StateChart# */ {
+var StateChart = exports.StateChart = Montage.specialize(/** @lends StateChart# */ {
 /**
         @type {Property}
         @default {String} null

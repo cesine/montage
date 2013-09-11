@@ -53,7 +53,7 @@ function() {
         });
         it("should describe a class instance object",
         function() {
-            var instance = objects.Simple.create();
+            var instance = new objects.Simple();
             var info = Montage.getInfoForObject(instance);
 
             expect(info.objectName).toBe("Simple");
@@ -78,6 +78,19 @@ function() {
             expect(info.objectName).toBe("FunkyProto");
             expect(info.isInstance).toBeFalsy();
             expect(info.moduleId).toBe("core/testobjects");
+        });
+
+        it("should not be added to the Object constructor", function () {
+            Montage.getInfoForObject(Object.prototype);
+
+            var instance = new objects.Simple();
+            var info = Montage.getInfoForObject(instance);
+
+            expect(info.objectName).toBe("Simple");
+            expect(info.isInstance).toBeTruthy();
+            expect(info.moduleId).toBe("core/testobjects");
+
+            expect(Object.prototype.hasOwnProperty("_montage_metadata")).toBe(false);
         });
     });
 });

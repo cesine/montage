@@ -10,15 +10,16 @@ var Promise = require("core/promise").Promise;
 
 var logger = require("core/logger").logger("blueprint");
 
-exports.RemoteReference = Montage.create(Montage, {
+exports.RemoteReference = Montage.specialize( {
 
     /**
-      didCreate method
+      constructor method
       @function
       @private
     */
-    didCreate: {
-        value: function() {
+    constructor: {
+        value: function RemoteReference() {
+            this.super();
             this._value = null;
             this._reference = null;
             this._promise = null;
@@ -104,6 +105,10 @@ exports.RemoteReference = Montage.create(Montage, {
         value: function(value) {
             return {};
         }
-    }
+    },
+
+    blueprintModuleId: require("montage")._blueprintModuleIdDescriptor,
+
+    blueprint: require("montage")._blueprintDescriptor
 
 });

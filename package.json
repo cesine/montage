@@ -1,11 +1,12 @@
 {
   "name": "montage",
-  "version": "0.12.7",
+  "version": "0.13.6",
   "description": "A UI Framework",
-  "main": "montage",
-  "bin": {
-    "montage": "bin/montage"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/montagejs/montage.git"
   },
+  "main": "montage",
   "overlay": {
     "browser": {
       "main": "core/core",
@@ -18,23 +19,31 @@
           "name": "q",
           "location": "packages/mr/packages/q"
         }
-      },
-      "exclude": [
-        "lab",
-        "etc",
-        "node.js"
-      ]
+      }
     }
   },
   "dependencies": {
-    "collections": "~0.1.14"
+    "collections": "~0.1.23",
+    "frb": "~0.2.11",
+    "mousse": "~0.1.2",
+    "htmlparser2": "~3.0.5"
   },
   "devDependencies": {
-    "mr": "~0.12.6",
-    "q": "~0.8.12",
-    "q-io": "~1.3.2"
+    "montage-testing": "~0.2.0",
+    "mr": "~0.13.0",
+    "q": "0.9.6",
+    "q-io": "~1.7.2",
+    "jshint": "~2.0.1"
   },
-  "optionalDependencies": {
-    "jsdom": "~0.2.19"
-  }
+  "scripts": {
+    "test": "node test/node/node-spec.js",
+    "jsdoc": "node ../montagejs.org/build/jsdoc/jsdoc.js -out $PWD/builds/jsdoc/ montage@npm-link"
+  },
+  "exclude": [
+    "etc",
+    "lab",
+    "node.js",
+    "test",
+    "tools"
+  ]
 }

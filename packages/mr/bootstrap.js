@@ -15,10 +15,12 @@
             callbackIfReady();
         }
 
-        // this permits bootstrap.js to be injected after domready
-        document.addEventListener("DOMContentLoaded", domLoad, true);
-        if (document.readyState === "interactive") {
+        // this permits bootstrap.js to be injected after DOMContentLoaded
+        // http://jsperf.com/readystate-boolean-vs-regex/2
+        if (/interactive|complete/.test(document.readyState)) {
             domLoad();
+        } else {
+            document.addEventListener("DOMContentLoaded", domLoad, true);
         }
 
         // determine which scripts to load
@@ -28,9 +30,11 @@
             "promise": "packages/q/q.js"
         };
 
+        /*jshint -W089 */
         if (!global.preload) {
+            var mrLocation = resolve(window.location, params.mrLocation);
             for (var id in pending) {
-                load(pending[id]);
+                load(resolve(mrLocation, pending[id]));
             }
         }
 
@@ -40,7 +44,7 @@
         global.bootstrap = function (id, factory) {
             definitions[id] = factory;
             delete pending[id];
-            for (var id in pending) {
+            for (id in pending) {
                 // this causes the function to exit if there are any remaining
                 // scripts loading, on the first iteration.  consider it
                 // equivalent to an array length check
@@ -51,6 +55,7 @@
             delete global.bootstrap;
             allModulesLoaded();
         };
+        /*jshint +W089 */
 
         // one module loaded for free, for use in require.js, browser.js
         global.bootstrap("mini-url", function (require, exports) {
@@ -106,14 +111,24 @@
                 if (mrLocation) {
                     if (script.dataset) {
                         for (name in script.dataset) {
-                            params[name] = script.dataset[name];
+                            if (script.dataset.hasOwnProperty(name)) {
+                                params[name] = script.dataset[name];
+                            }
                         }
                     } else if (script.attributes) {
+                        var dataRe = /^data-(.*)$/,
+                            letterAfterDash = /-([a-z])/g,
+                            /*jshint -W083 */
+                            upperCaseChar = function (_, c) {
+                                return c.toUpperCase();
+                            };
+                            /*jshint +W083 */
+
                         for (j = 0; j < script.attributes.length; j++) {
                             attr = script.attributes[j];
                             match = attr.name.match(/^data-(.*)$/);
                             if (match) {
-                                params[match[1]] = attr.value;
+                                params[match[1].replace(letterAfterDash, upperCaseChar)] = attr.value;
                             }
                         }
                     }
@@ -162,9 +177,8 @@
     var resolve = makeResolve();
 
     var load = function (location) {
-        var params = getParams();
         var script = document.createElement("script");
-        script.src = resolve(params.mrLocation, location);
+        script.src = location;
         script.onload = function () {
             // remove clutter
             script.parentNode.removeChild(script);
@@ -237,7 +251,7 @@
                     location: applicationLocation,
                     hash: params.applicationHash
                 })
-                .invoke('async', moduleId)
+                .invoke('async', moduleId);
             });
 
         })

@@ -1,32 +1,4 @@
 /* <copyright>
-Copyright (c) 2012, Motorola Mobility LLC.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice,
-  this list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-
-* Neither the name of Motorola Mobility LLC nor the names of its
-  contributors may be used to endorse or promote products derived from this
-  software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
 </copyright> */
 
 // Number and String formatting functions from Google Closure Library - http://code.google.com/closure/library/
@@ -46,11 +18,17 @@ POSSIBILITY OF SUCH DAMAGE.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+// Copyright © 2011 Andrew Plummer
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sub-license, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+// The above copyright notice, and every other copyright notice found in this software, and all the attributions in every file, and this permission notice shall be included in all copies or substantial portions of the Software.
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+//
 /**
-	@module montage/core/converter/number-converter
-    @requires montage/core/core
-    @requires montage/core/converter/converter
-*/
+ * @module montage/core/converter/number-converter
+ * @requires montage/core/core
+ * @requires montage/core/converter/converter
+ */
 var Montage = require("montage").Montage;
 var Converter = require('core/converter/converter').Converter;
 var Validator = require("core/converter/converter").Validator;
@@ -58,23 +36,23 @@ var isNumber = require('core/converter/converter').isNumber;
 var isDef = require('core/converter/converter').isDef;
 
 /**
- Regular expression for detecting scaling units, such as K, M, G, etc. for<br>
- converting a string representation to a numeric value.
- Also allow 'k' to be aliased to 'K'.  These could be used for SI (powers<br>
- of 1000) or Binary (powers of 1024) conversions.<br>
- Also allow final 'B' to be interpreted as byte-count, implicitly triggering<br>
- binary conversion (e.g., '10.2MB').
- @type {RegExp}
- @memberof module:montage/core/converter#
- @private
+ * Regular expression for detecting scaling units, such as K, M, G, etc. for<br>
+ * converting a string representation to a numeric value.
+ * Also allow 'k' to be aliased to 'K'.  These could be used for SI (powers<br>
+ * of 1000) or Binary (powers of 1024) conversions.<br>
+ * Also allow final 'B' to be interpreted as byte-count, implicitly triggering<br>
+ * binary conversion (e.g., '10.2MB').
+ * @type {RegExp}
+ * @memberof module:montage/core/converter#
+ * @private
  */
 var SCALED_NUMERIC_RE_ = /^([\-]?\d+\.?\d*)([K,M,G,T,P,k,m,u,n]?)[B]?$/;
 
 /**
- Ordered list of scaling prefixes in decreasing order.
- @memberof module:montage/converter#
- @type {Array}
- @private
+ * Ordered list of scaling prefixes in decreasing order.
+ * @memberof module:montage/converter#
+ * @type {Array}
+ * @private
  */
     // kishore - changed prefix 'G' to 'B' to represent Billion
 var NUMERIC_SCALE_PREFIXES_ = [
@@ -83,10 +61,10 @@ var NUMERIC_SCALE_PREFIXES_ = [
 
 
 /**
- Scaling factors for conversion of numeric value to string.  SI conversion.
- @memberof module:montage/converter#
- @type {Object}
- @private
+ * Scaling factors for conversion of numeric value to string.  SI conversion.
+ * @memberof module:montage/converter#
+ * @type {Object}
+ * @private
  */
 var NUMERIC_SCALES_SI_ = exports.NUMERIC_SCALES_SI_ = {
     '': 1,
@@ -102,10 +80,10 @@ var NUMERIC_SCALES_SI_ = exports.NUMERIC_SCALES_SI_ = {
 };
 
 /**
- Scaling factors for conversion of numeric value to string. Binary conversion.
- @memberof module:montage/converter#
- @type {Object}
- @private
+ * Scaling factors for conversion of numeric value to string. Binary conversion.
+ * @memberof module:montage/converter#
+ * @type {Object}
+ * @private
  */
 var NUMERIC_SCALES_BINARY_ = exports.NUMERIC_SCALES_BINARY_ = {
     '': 1,
@@ -158,12 +136,12 @@ var _numericValueToString = exports._numericValueToString = function(val, conver
 };
 
 /**
- Converts a string to numeric value, taking into account the units.
- @memberof module:montage/converter#
- @param {string} stringValue String to be converted to numeric value.
- @param {Object} conversion Dictionary of conversion scales.
- @return {number} Numeric value for string.  If it cannot be converted, returns NaN.
- @private
+ * Converts a string to numeric value, taking into account the units.
+ * @memberof module:montage/converter#
+ * @param {string} stringValue String to be converted to numeric value.
+ * @param {Object} conversion Dictionary of conversion scales.
+ * @return {number} Numeric value for string.  If it cannot be converted, returns NaN.
+ * @private
  */
 var _stringToNumericValue = function(stringValue, conversion) {
     var match = stringValue.match(SCALED_NUMERIC_RE_);
@@ -175,14 +153,14 @@ var _stringToNumericValue = function(stringValue, conversion) {
 
 
 /**
- Checks whether string value containing scaling units (K, M, G, T, P, m, u, n) can be converted to a number.<br>
- Where there is a decimal, there must be a digit to the left of the decimal point.<br>
- Negative numbers are valid.<br>
- @example 0, 1, 1.0, 10.4K, 2.3M, -0.3P, 1.2m
- @memberof module:montage/core/converter#
- @function
- @param {String} val String value to check.
- @return {Boolean} true If the string could be converted to a numeric value.
+ * Checks whether string value containing scaling units (K, M, G, T, P, m, u, n) can be converted to a number.<br>
+ * Where there is a decimal, there must be a digit to the left of the decimal point.<br>
+ * Negative numbers are valid.<br>
+ * @example 0, 1, 1.0, 10.4K, 2.3M, -0.3P, 1.2m
+ * @memberof module:montage/core/converter#
+ * @function
+ * @param {String} val String value to check.
+ * @return {Boolean} true If the string could be converted to a numeric value.
  */
 var isConvertableScaledNumber = function(val) {
     return SCALED_NUMERIC_RE_.test(val);
@@ -190,12 +168,12 @@ var isConvertableScaledNumber = function(val) {
 
 
 /**
- Converts a string to numeric value, taking into account the units.<br>
- If string ends in 'B', use binary conversion.
- @memberof module:montage/core/converter#
- @function
- @param {String} stringValue String to be converted to numeric value.
- @return {Number} Numeric value for string.
+ * Converts a string to numeric value, taking into account the units.<br>
+ * If string ends in 'B', use binary conversion.
+ * @memberof module:montage/core/converter#
+ * @function
+ * @param {String} stringValue String to be converted to numeric value.
+ * @return {Number} Numeric value for string.
  */
 var stringToNumericValue = exports.stringToNumericValue = function(stringValue) {
     if (stringValue.endsWith('B')) {
@@ -209,12 +187,12 @@ var stringToNumericValue = exports.stringToNumericValue = function(stringValue) 
 
 
 /**
-   Converts a numeric value to string representation. SI conversion.
-   @memberof module:montage/core/converter#
-   @function
-   @param {Number} val Value to be converted.
-   @param {Number} opt_decimals The number of decimals to use. Defaults to 2.
-   @returns {String} String representation of number.
+ * Converts a numeric value to string representation. SI conversion.
+ * @memberof module:montage/core/converter#
+ * @function
+ * @param {Number} val Value to be converted.
+ * @param {Number} opt_decimals The number of decimals to use. Defaults to 2.
+ * @returns {String} String representation of number.
  */
 var numericValueToString = exports.numericValueToString = function(val, opt_decimals) {
     return _numericValueToString(val, NUMERIC_SCALES_SI_, opt_decimals);
@@ -223,37 +201,37 @@ var numericValueToString = exports.numericValueToString = function(val, opt_deci
 
 
 /**
- @class module:montage/core/converter/number-converter.NumberValidator
- @classdesc Validates that a string can be represented as a numeric value, and returns the numeric value.
- @extends module:montage/core/converter.Validator
+ * @class NumberValidator
+ * @classdesc Validates that a string can be represented as a numeric value, and returns the numeric value.
+ * @extends Validator
  */
-var NumberValidator = exports.NumberValidator = Montage.create(Validator, /** @lends montage/core/converter/number-converter.NumberValidator# */ {
+var NumberValidator = exports.NumberValidator = Validator.specialize( /** @lends NumberValidator# */ {
 
     /**
-     Indicates whether floating point values are allowed.<br>
-     If <code>true</code> (the default) then the validator attempts to parse the string as a float value.<br>
-     If <code>false</code>, it attempts to parse the value as an integer.
-     @type {Property}
-     @default {Boolean} true
+     * Indicates whether floating point values are allowed.<br>
+     * If <code>true</code> (the default) then the validator attempts to parse the string as a float value.<br>
+     * If <code>false</code>, it attempts to parse the value as an integer.
+     * @type {Property}
+     * @default {Boolean} true
      */
     allowFloat: {
         value: true
     },
 
     /**
-        @type {Property}
-        @default {Boolean} true
-    */
+     * @type {Property}
+     * @default {Boolean} true
+     */
     allowNegative: {
         value: true
     },
 
     /**
-     Determines if the parameter <code>v</code> is a number or not.
-     @function
-     @param {String} v The value to validate as a number.
-     @returns {Number} num An integer or float, if the value provided to the function can parsed as a number;
-     otherwise returns an error.
+     * Determines if the parameter <code>v</code> is a number or not.
+     * @function
+     * @param {String} v The value to validate as a number.
+     * @returns {Number} num An integer or float, if the value provided to the function can parsed as a number;
+     * otherwise returns an error.
      */
     validate: {
         value: function(v) {
@@ -279,94 +257,115 @@ var NumberValidator = exports.NumberValidator = Montage.create(Validator, /** @l
 
 
 /**
- @class module:montage/core/converter/number-converter.NumberConverter
- @classdesc Formats a number for easier readability.
+ * @class NumberConverter
+ * @classdesc Formats a number for easier readability.
  */
-var NumberConverter = exports.NumberConverter = Montage.create(Converter, /** @lends montage/core/converter/number-converter.NumberConverter# */ {
+var NumberConverter = exports.NumberConverter = Converter.specialize( /** @lends NumberConverter# */ {
 
     /**
-        @type {Property}
-        @default {Boolean} false
-    */
-        // do not allow partial conversion
+     * Allow partial conversion
+     * @type {Property}
+     * @default {Boolean} false
+     */
     allowPartialConversion: {
         value: false
     },
+
     /**
-        @type {Function}
-        @default {attribute} NumberValidator Uses this object.
-    */
+     * @type {Function}
+     * @default {attribute} NumberValidator Uses this object.
+     */
     validator: {
-        value: Montage.create(NumberValidator)
+        value: new NumberValidator()
     },
 
-   /**
-        @type {Property}
-        @default {String} null
-    */
+    /**
+     * @type {Property}
+     * @default {String} null
+     */
         // valid fn values are:
     shorten: {
         value: null
     },
+
     /**
-        @type {Property}
-        @default {Number} 2
-    */
+     * @type {Property}
+     * @default {Number} 2
+     */
     decimals: {
         value: 2
     },
 
     /**
-        @type {Property}
-        @default {Number} null
-    */
+     * @type {Property}
+     * @default {Boolean} false
+     */
+     forceDecimals: {
+        value: false
+     },
+
+    /**
+     * @type {Property}
+     * @default {Number} null
+     */
     round: {
         value: null
     },
 
-   /**
-  @private
-*/
+    /**
+     * @private
+     */
     _reg: {
         value: /(\d+)(\d{3})/
     },
 
     /**
-        @type {Property}
-        @default {Boolean} true
-    */
+     * @type {Property}
+     * @default {Boolean} true
+     */
     allowFloat: {
         value: true
     },
+
     /**
-        @type {Property}
-        @default {Boolean} true
-    */
+     * @type {Property}
+     * @default {Boolean} true
+     */
     allowNegative: {
         value: true
     },
 
     // credit: sugar.js - https://github.com/andrewplummer/Sugar
     /**
-     @private
+     * @private
      */
     _makeReadable: {
         value: function(num, comma, period) {
             comma = comma || ',';
             period = period || '.';
             var split = num.toString().split('.');
+
             var numeric = split[0];
-            var decimal = split.length > 1 ? period + split[1] : '';
             while (this._reg.test(numeric)) {
                 numeric = numeric.replace(this._reg, '$1' + comma + '$2');
             }
+
+            var afterDecimal = split.length > 1 ? split[1] : '';
+            if (this.forceDecimals) {
+                while (afterDecimal.length < this.decimals) {
+                    afterDecimal += '0';
+                }
+            }
+            
+            var decimal = afterDecimal.length > 0 ? period + afterDecimal : '';
             return numeric + decimal;
         }
     },
+
     /**
-     @function
-     @param {Value} v The value to convert.
-     @returns this._makeReadable(num)
+     * @function
+     * @param {number} value The value to convert.
+     * @returns {String}
      */
     convert: {
         value: function(v) {
@@ -389,8 +388,13 @@ var NumberConverter = exports.NumberConverter = Montage.create(Converter, /** @l
     },
 
     /**
-     @function
-     @param {String} stringValue The value of the string.
+     * @function
+     * @param {String} stringValue The string representation of a number.
+     * @returns {number} The numeric value validated with to {NumberConverter#validator}.
+     * @throws {Error} if the return value of {NumberConverter#validator#validate} is not a number
+     * @see NumberConverter#validator
+     * @see NumberConverter#allowFloat
+     * @see NumberConverter#allowNegative
      */
     revert: {
         value: function(stringValue) {
