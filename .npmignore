@@ -8,6 +8,3 @@ TEST-*.xml
 .gitignore
 .jshintignore
 .jshintrc
-spec
-test
-tools
