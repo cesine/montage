@@ -371,6 +371,30 @@ describe("core/localizer-spec", function() {
                     expect(num_albums({albums: 4})).toBe("4 fotoalbuma");
                 });
             });
+
+
+            it("loads non-English messages from multiple messages files ", function() {
+                var l = new Localizer.Localizer().init("no");
+                return require.loadPackage(module.directory + "localizer/multiple-messages-files/", {}).then(function(r){
+                    l.require = r;
+                    return l.loadMessages();
+                }).then(function(messages) {
+                    expect(messages.hello).toBe("Hei ja");
+                });
+
+            });
+
+            it("loads multiple messages files ", function() {
+                var l = new Localizer.Localizer().init("no");
+                return require.loadPackage(module.directory + "localizer/multiple-messages-files/", {}).then(function(r){
+                    l.require = r;
+                    return l.loadMessages();
+                }).then(function(messages) {
+                    expect(messages.extra).toBe("Ja e mesede du");
+                });
+
+            });
+
         });
     });
 
