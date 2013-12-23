@@ -264,7 +264,8 @@ if (typeof window !== "undefined") {
                     config.lint = function (module) {
                         montageRequire.async("core/jshint")
                         .then(function (JSHINT) {
-                            if (!JSHINT.JSHINT(module.text)) {
+                            // Dont run jshint on binary .node files
+                            if (!JSHINT.JSHINT(module.text) && module.location.indexOf(".node") !== module.location.length - 5) {
                                 console.warn("JSHint Error: "+module.location);
                                 JSHINT.JSHINT.errors.forEach(function(error) {
                                     if (error) {
