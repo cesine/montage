@@ -157,7 +157,11 @@
                     return deepLoad(depId, topId, loading);
                 }));
             }, function (error) {
-                module.error = error;
+                if (module.type === "node" || (topId.length > 6 && topId.indexOf(".node") === topId.length - 5)) {
+                    console.warn("Stopping deep load of " + topId);
+                } else {
+                    module.error = error;
+                }
             });
         }
 
@@ -198,6 +202,13 @@
             // do not reinitialize modules
             if (module.exports !== void 0) {
                 return module.exports;
+            }
+
+            if (module.type === "node") {
+                console.warn("Adding empty factory for" + topId);
+                module.factory = function(require, exports, module) {
+                    console.log("No factory for .node");
+                };
             }
 
             // do not initialize modules that do not define a factory function
