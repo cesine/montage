@@ -839,6 +839,7 @@
             if (!extension || (
                 extension !== "js" &&
                 extension !== "json" &&
+                extension !== "node" &&
                 config.moduleTypes.indexOf(extension) === -1
             )) {
                 path += ".js";
