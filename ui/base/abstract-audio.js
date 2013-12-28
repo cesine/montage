@@ -1,25 +1,25 @@
 /*global require, exports*/
 
 /**
- * @module montage/ui/base/abstract-video.reel
+ * @module montage/ui/base/abstract-audio.reel
  */
 var Montage = require("montage").Montage,
     Component = require("ui/component").Component,
     MediaController = require("core/media-controller").MediaController;
 
 /**
- * @class AbstractVideo
+ * @class AbstractAudio
  * @extends Component
  */
-var AbstractVideo = exports.AbstractVideo = Component.specialize(/** @lends AbstractVideo# */ {
+var AbstractAudio = exports.AbstractAudio = Component.specialize(/** @lends AbstractAudio# */ {
 
     /**
      * @private
      */
     constructor: {
-        value: function AbstractVideo() {
-            if (this.constructor === AbstractVideo) {
-                throw new Error("AbstractVideo cannot be instantiated.");
+        value: function AbstractAudio() {
+            if (this.constructor === AbstractAudio) {
+                throw new Error("AbstractAudio cannot be instantiated.");
             }
             Component.constructor.call(this); // super
         }
@@ -38,28 +38,28 @@ var AbstractVideo = exports.AbstractVideo = Component.specialize(/** @lends Abst
                 this._mediaElement.controller = null;
             }
             this._mediaElement = element;
-            if (this.videoController) {
-                this._mediaElement.controller = this.videoController.mediaController;
+            if (this.audioController) {
+                this._mediaElement.controller = this.audioController.mediaController;
             }
         }
     },
 
-    _videoController: {
+    _audioController: {
         value: null
     },
 
     /**
-     * The MediaController instance used by the video component.
+     * The MediaController instance used by the audio component.
      * @type {module:montage/core/media-controller.MediaController}
      * @default null
      */
-    videoController: {
+    audioController: {
         get: function () {
-            return this._videoController;
+            return this._audioController;
         },
         set: function (controller) {
             if (controller) {
-                this._videoController = controller;
+                this._audioController = controller;
                 if (this.mediaElement) {
                     this.mediaElement.controller = controller.mediaController;
                 }
@@ -100,7 +100,7 @@ var AbstractVideo = exports.AbstractVideo = Component.specialize(/** @lends Abst
         },
         set: function (sources) {
             if (sources && sources.length) {
-                var mediaElement = this.element.ownerDocument.createElement("video");
+                var mediaElement = this.element.ownerDocument.createElement("audio");
                 for (var i = 0; i < sources.length; i++) {
                     var mediaSrc = sources[i].src,
                         mediaType = sources[i].type;
@@ -188,7 +188,7 @@ var AbstractVideo = exports.AbstractVideo = Component.specialize(/** @lends Abst
     },
 
     /**
-     * Specifies whether the full screen video is supported.
+     * Specifies whether the full screen audio is supported.
      * @type {boolean}
      * @default true
      */
@@ -286,13 +286,13 @@ var AbstractVideo = exports.AbstractVideo = Component.specialize(/** @lends Abst
                     }
                 }
 
-                this.addPathChangeListener("videoController.status", this, "handleControllerStatusChange");
-                this.addPathChangeListener("videoController.volume", this, "handleControllerVolumeChange");
+                this.addPathChangeListener("audioController.status", this, "handleControllerStatusChange");
+                this.addPathChangeListener("audioController.volume", this, "handleControllerVolumeChange");
 
-                if (!this.videoController) {
-                    this.videoController = Montage.create(MediaController);
+                if (!this.audioController) {
+                    this.audioController = Montage.create(MediaController);
                 }
-                this.mediaElement.controller = this.videoController.mediaController;
+                this.mediaElement.controller = this.audioController.mediaController;
             }
         }
     }

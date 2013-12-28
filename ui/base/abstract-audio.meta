@@ -7,10 +7,10 @@
             "valueType": "object"
         }
     },
-    "videoController_property": {
+    "audioController_property": {
         "prototype": "core/meta/property-blueprint",
         "properties": {
-            "name": "videoController",
+            "name": "audioController",
             "blueprint": {"@": "root"},
             "valueType": "object"
         }
@@ -77,13 +77,13 @@
     "root": {
         "prototype": "core/meta/blueprint",
         "properties": {
-            "name": "AbstractVideo",
-            "blueprintModuleId": "ui/base/abstract-video.meta",
-            "prototypeName": "AbstractVideo",
+            "name": "AbstractAudio",
+            "blueprintModuleId": "ui/base/abstract-audio.meta",
+            "prototypeName": "AbstractAudio",
             "parent": {"@": "blueprint_parent"},
             "propertyBlueprints": [
                 {"@": "mediaElement_property"},
-                {"@": "videoController_property"},
+                {"@": "audioController_property"},
                 {"@": "src_property"},
                 {"@": "sources_property"},
                 {"@": "repeat_property"},
@@ -94,7 +94,7 @@
             "propertyBlueprintGroups": {
                 "Main": [
                     {"@": "mediaElement_property"},
-                    {"@": "videoController_property"},
+                    {"@": "audioController_property"},
                     {"@": "src_property"},
                     {"@": "sources_property"},
                     {"@": "repeat_property"},

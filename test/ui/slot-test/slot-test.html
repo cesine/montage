@@ -88,6 +88,15 @@ POSSIBILITY OF SUCH DAMAGE.
                 "video": {"<-": "@test.currentMedia"}
             }
         },
+        "audioviewer1": {
+            "prototype": "ui/slot-test/audio-viewer.reel",
+            "properties": {
+
+            },
+            "bindings": {
+                "audio": {"<-": "@test.currentMedia"}
+            }
+        },
         "slider2": {
             "prototype": "montage/ui/text.reel",
             "properties": {
@@ -191,6 +200,20 @@ POSSIBILITY OF SUCH DAMAGE.
                 "identifier": "videoButton"
             }
         },
+        "button9Composer": {
+            "prototype": "montage/composer/press-composer",
+            "properties": {
+                "component": {"@": "button9"},
+                "identifier": "audioButton"
+            }
+        },
+        "button9": {
+            "prototype": "montage/ui/text.reel",
+            "properties": {
+                "element": {"#": "audioButton"},
+                "identifier": "audioButton"
+            }
+        },
         "button8Composer": {
             "prototype": "montage/composer/press-composer",
             "properties": {
@@ -213,6 +236,7 @@ POSSIBILITY OF SUCH DAMAGE.
                 "componentInPageWithElement": {"@": "dynamictext1"},
                 "photoViewer": {"@": "photoviewer1"},
                 "videoViewer": {"@": "videoviewer1"},
+                "audioViewer": {"@": "audioviewer1"},
                 "barContent": {"@": "slider2"},
                 "bazContent": {"#": "bazContent"},
                 "quxContent": {"#": "quxContent"},
@@ -224,6 +248,7 @@ POSSIBILITY OF SUCH DAMAGE.
                 "quxButton": {"@": "button5"},
                 "emptyButton": {"@": "button6"},
                 "videoButton": {"@": "button7"},
+                "audioButton": {"@": "button9"},
                 "photoButton": {"@": "button8"}
             }
         },
@@ -259,6 +284,7 @@ POSSIBILITY OF SUCH DAMAGE.
         <button class="button" data-montage-id="emptyButton">Show Nothing in Slot</button>
 
         <button class="button" data-montage-id="videoButton">Switch to "video"</button>
+        <button class="button" data-montage-id="audioButton">Switch to "audio"</button>
         <button class="button" data-montage-id="photoButton">Switch to "photo"</button>
     </div>
 

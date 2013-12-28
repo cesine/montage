@@ -31,21 +31,21 @@ POSSIBILITY OF SUCH DAMAGE.
 var Montage = require("montage").Montage,
     Component = require("montage/ui/component").Component;
 
-var VideoViewer = exports.VideoViewer = Component.specialize( {
+var AudioViewer = exports.AudioViewer = Component.specialize( {
 
     templateDidLoad: {
         value: function() {
-            //console.log("VIDEOVIEWER REEL DID LOAD");
+            console.log("AUDIOVIEWER REEL DID LOAD");
         }
     },
 
     deserializedFromTemplate: {
         value: function() {
-            //console.log("VIDEOVIEWER DESERIALIZED FROM REEL");
+            console.log("AUDIOVIEWER DESERIALIZED FROM REEL");
         }
     },
 
-    video: {
+    audio: {
         enumerable: false,
         value: null
     }

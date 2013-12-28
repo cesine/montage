@@ -31,7 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 </copyright> -->
 <html>
 <head>
-    <title>Video Viewer</title>
+    <title>Audio Viewer</title>
     <script type="text/montage-serialization">{
 
     "dynamictext1": {
@@ -40,7 +40,7 @@ POSSIBILITY OF SUCH DAMAGE.
             "element": {"#": "description"}
         },
         "bindings": {
-            "value": {"<-": "@owner.video.description"}
+            "value": {"<-": "@owner.audio.description"}
         }
     },
     "dynamictext2": {
@@ -49,22 +49,22 @@ POSSIBILITY OF SUCH DAMAGE.
             "element": {"#": "duration"}
         },
         "bindings": {
-            "value": {"<-": "@owner.video.duration"}
+            "value": {"<-": "@owner.audio.duration"}
         }
     },
     "owner": {
-        "prototype": "video-viewer",
+        "prototype": "audio-viewer",
         "properties": {
-            "element": {"#": "VideoViewer"}
+            "element": {"#": "AudioViewer"}
         }
     }
 
     }</script>
 
 </head>
-<body id="VideoViewer">
+<body id="AudioViewer">
 
-    <h1>Video</h1>
+    <h1>Audio</h1>
     Description: <span id="description"></span><br>
     Duration: <span id="duration"></span>
 

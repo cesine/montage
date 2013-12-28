@@ -55,6 +55,18 @@ var PhotoMedia = Media.specialize( {
 
 });
 
+var AudioMedia = Media.specialize( {
+
+    type: {
+        value: "audio"
+    },
+
+    duration: {
+        value: null
+    }
+
+});
+
 var VideoMedia = Media.specialize( {
 
     type: {
@@ -71,6 +83,10 @@ var SlotTest = exports.SlotTest = Component.specialize( {
 
     init: {
         value: function() {
+            this.audio = new AudioMedia();
+            this.audio.duration = "VIDEO 81 Minutes";
+            this.audio.description = "VIDEO: The Last Dispatch"
+
             this.video = new VideoMedia();
             this.video.duration = "VIDEO 81 Minutes";
             this.video.description = "VIDEO: The Last Dispatch"
@@ -91,6 +107,10 @@ var SlotTest = exports.SlotTest = Component.specialize( {
         value: function() {
             this.init();
         }
+    },
+
+    audio: {
+        value: null
     },
 
     video: {
@@ -150,6 +170,11 @@ var SlotTest = exports.SlotTest = Component.specialize( {
         value: null
     },
 
+    audioViewer: {
+        enumerable: false,
+        value: null
+    },
+
     videoViewer: {
         enumerable: false,
         value: null
@@ -185,6 +210,11 @@ var SlotTest = exports.SlotTest = Component.specialize( {
         value: null
     },
 
+    audioButton: {
+        enumerable: false,
+        value: null
+    },
+
     videoButton: {
         enumerable: false,
         value: null
@@ -206,6 +236,7 @@ var SlotTest = exports.SlotTest = Component.specialize( {
                 this.quxButton.addEventListener("action", this);
                 this.emptyButton.addEventListener("action", this);
 
+                this.audioButton.addEventListener("action", this);
                 this.videoButton.addEventListener("action", this);
                 this.photoButton.addEventListener("action", this);
             }
@@ -223,6 +254,14 @@ var SlotTest = exports.SlotTest = Component.specialize( {
         enumerable: false,
         value: function() {
             this.showContent(this.componentInPageWithElement);
+        }
+    },
+
+    handleAudioButtonPress: {
+        enumerable: false,
+        value: function() {
+            this.currentMedia = this.audio;
+            this.showContent(this.audioViewer);
         }
     },
 
