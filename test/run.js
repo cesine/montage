@@ -28,6 +28,7 @@ require("montage-testing").run(require,[
         "base/abstract-text-field-spec",
         "base/abstract-toggle-button-spec",
         "base/abstract-video-spec",
+        "base/abstract-audio-spec",
 
         "bindings/spec",
         "bindings/converter-spec",
