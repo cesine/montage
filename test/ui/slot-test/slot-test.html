@@ -36,64 +36,64 @@ POSSIBILITY OF SUCH DAMAGE.
     <script src="../../../montage.js" data-package="../../"></script>
     <script type="text/montage-serialization">{
 
-    "slot1": {
-        "prototype": "montage/ui/slot.reel",
-        "properties": {
-            "element": {"#": "slot"}
-        }
-    },
-    "slider1": {
-        "prototype": "montage/ui/text.reel",
-        "properties": {
-            "element": {"#": "slider"}
-        }
-    },
-    "dynamictext1": {
-        "prototype": "montage/ui/text.reel",
-        "properties": {
-            "element": {"#": "componentInPageWithElement"},
-            "value": "This is a component in the page with an element"
-        }
-    },
-    "dynamictext2": {
-        "prototype": "montage/ui/text.reel",
-        "properties": {
-            "element": {"#": "sliderValue"}
+        "slot1": {
+            "prototype": "montage/ui/slot.reel",
+            "properties": {
+                "element": {"#": "slot"}
+            }
         },
-        "bindings": {
-            "value": {"<-": "@slider1.value"}
-        }
-    },
-    "dynamictext3": {
-        "prototype": "montage/ui/text.reel",
-        "properties": {
-            "value": "Hey there, I'm the foo component!"
-        }
-    },
-    "photoviewer1": {
-        "prototype": "ui/slot-test/photo-viewer.reel",
-        "properties": {
+        "slider1": {
+            "prototype": "montage/ui/text.reel",
+            "properties": {
+                "element": {"#": "slider"}
+            }
+        },
+        "dynamictext1": {
+            "prototype": "montage/ui/text.reel",
+            "properties": {
+                "element": {"#": "componentInPageWithElement"},
+                "value": "This is a component in the page with an element"
+            }
+        },
+        "dynamictext2": {
+            "prototype": "montage/ui/text.reel",
+            "properties": {
+                "element": {"#": "sliderValue"}
+            },
+            "bindings": {
+                "value": {"<-": "@slider1.value"}
+            }
+        },
+        "dynamictext3": {
+            "prototype": "montage/ui/text.reel",
+            "properties": {
+                "value": "Hey there, I'm the foo component!"
+            }
+        },
+        "photoviewer1": {
+            "prototype": "ui/slot-test/photo-viewer.reel",
+            "properties": {
 
+            },
+            "bindings": {
+                "photo": {"<-": "@test.currentMedia"}
+            }
         },
-        "bindings": {
-            "photo": {"<-": "@test.currentMedia"}
-        }
-    },
-    "videoviewer1": {
-        "prototype": "ui/slot-test/video-viewer.reel",
-        "properties": {
+        "videoviewer1": {
+            "prototype": "ui/slot-test/video-viewer.reel",
+            "properties": {
 
+            },
+            "bindings": {
+                "video": {"<-": "@test.currentMedia"}
+            }
         },
-        "bindings": {
-            "video": {"<-": "@test.currentMedia"}
-        }
-    },
-    "slider2": {
-        "prototype": "montage/ui/text.reel",
-        "properties": {
-            "value": 20
-        }
-    },
+        "slider2": {
+            "prototype": "montage/ui/text.reel",
+            "properties": {
+                "value": 20
+            }
+        },
         "button1Composer": {
             "prototype": "montage/composer/press-composer",
             "properties": {
@@ -101,13 +101,13 @@ POSSIBILITY OF SUCH DAMAGE.
                 "identifier": "componentWithNoElementButton"
             }
         },
-    "button1": {
-        "prototype": "montage/ui/text.reel",
-        "properties": {
-            "element": {"#": "componentWithNoElementButton"},
-            "identifier": "componentWithNoElementButton"
-        }
-    },
+        "button1": {
+            "prototype": "montage/ui/text.reel",
+            "properties": {
+                "element": {"#": "componentWithNoElementButton"},
+                "identifier": "componentWithNoElementButton"
+            }
+        },
         "button2Composer": {
             "prototype": "montage/composer/press-composer",
             "properties": {
@@ -115,13 +115,13 @@ POSSIBILITY OF SUCH DAMAGE.
                 "identifier": "componentInPageWithElementButton"
             }
         },
-    "button2": {
-        "prototype": "montage/ui/text.reel",
-        "properties": {
-            "element": {"#": "componentInPageWithElementButton"},
-            "identifier": "componentInPageWithElementButton"
-        }
-    },
+        "button2": {
+            "prototype": "montage/ui/text.reel",
+            "properties": {
+                "element": {"#": "componentInPageWithElementButton"},
+                "identifier": "componentInPageWithElementButton"
+            }
+        },
         "button3Composer": {
             "prototype": "montage/composer/press-composer",
             "properties": {
@@ -129,12 +129,12 @@ POSSIBILITY OF SUCH DAMAGE.
                 "identifier": "barButton"
             }
         },
-    "button3": {
-        "prototype": "montage/ui/text.reel",
-        "properties": {
-            "element": {"#": "barButton"}
-        }
-    },
+        "button3": {
+            "prototype": "montage/ui/text.reel",
+            "properties": {
+                "element": {"#": "barButton"}
+            }
+        },
         "button4Composer": {
             "prototype": "montage/composer/press-composer",
             "properties": {
@@ -142,13 +142,13 @@ POSSIBILITY OF SUCH DAMAGE.
                 "identifier": "bazButton"
             }
         },
-    "button4": {
-        "prototype": "montage/ui/text.reel",
-        "properties": {
-            "element": {"#": "bazButton"},
-            "identifier": "bazButton"
-        }
-    },
+        "button4": {
+            "prototype": "montage/ui/text.reel",
+            "properties": {
+                "element": {"#": "bazButton"},
+                "identifier": "bazButton"
+            }
+        },
         "button5Composer": {
             "prototype": "montage/composer/press-composer",
             "properties": {
@@ -156,13 +156,13 @@ POSSIBILITY OF SUCH DAMAGE.
                 "identifier": "quxButton"
             }
         },
-    "button5": {
-        "prototype": "montage/ui/text.reel",
-        "properties": {
-            "element": {"#": "quxButton"},
-            "identifier": "quxButton"
-        }
-    },
+        "button5": {
+            "prototype": "montage/ui/text.reel",
+            "properties": {
+                "element": {"#": "quxButton"},
+                "identifier": "quxButton"
+            }
+        },
         "button6Composer": {
             "prototype": "montage/composer/press-composer",
             "properties": {
@@ -170,13 +170,13 @@ POSSIBILITY OF SUCH DAMAGE.
                 "identifier": "emptyButton"
             }
         },
-    "button6": {
-        "prototype": "montage/ui/text.reel",
-        "properties": {
-            "element": {"#": "emptyButton"},
-            "identifier": "emptyButton"
-        }
-    },
+        "button6": {
+            "prototype": "montage/ui/text.reel",
+            "properties": {
+                "element": {"#": "emptyButton"},
+                "identifier": "emptyButton"
+            }
+        },
         "button7Composer": {
             "prototype": "montage/composer/press-composer",
             "properties": {
@@ -184,13 +184,13 @@ POSSIBILITY OF SUCH DAMAGE.
                 "identifier": "videoButton"
             }
         },
-    "button7": {
-        "prototype": "montage/ui/text.reel",
-        "properties": {
-            "element": {"#": "videoButton"},
-            "identifier": "videoButton"
-        }
-    },
+        "button7": {
+            "prototype": "montage/ui/text.reel",
+            "properties": {
+                "element": {"#": "videoButton"},
+                "identifier": "videoButton"
+            }
+        },
         "button8Composer": {
             "prototype": "montage/composer/press-composer",
             "properties": {
@@ -198,85 +198,85 @@ POSSIBILITY OF SUCH DAMAGE.
                 "identifier": "photoButton"
             }
         },
-    "button8": {
-        "prototype": "montage/ui/text.reel",
-        "properties": {
-            "element": {"#": "photoButton"},
-            "identifier": "photoButton"
+        "button8": {
+            "prototype": "montage/ui/text.reel",
+            "properties": {
+                "element": {"#": "photoButton"},
+                "identifier": "photoButton"
+            }
+        },
+        "test": {
+            "prototype": "ui/slot-test/slot-test",
+            "properties": {
+                "element": {"#": "slotChooser"},
+                "componentWithNoElement": {"@": "dynamictext3"},
+                "componentInPageWithElement": {"@": "dynamictext1"},
+                "photoViewer": {"@": "photoviewer1"},
+                "videoViewer": {"@": "videoviewer1"},
+                "barContent": {"@": "slider2"},
+                "bazContent": {"#": "bazContent"},
+                "quxContent": {"#": "quxContent"},
+                "slot": {"@": "slot1"},
+                "componentWithNoElementButton": {"@": "button1"},
+                "componentInPageWithElementButton": {"@": "button2"},
+                "barButton": {"@": "button3"},
+                "bazButton": {"@": "button4"},
+                "quxButton": {"@": "button5"},
+                "emptyButton": {"@": "button6"},
+                "videoButton": {"@": "button7"},
+                "photoButton": {"@": "button8"}
+            }
+        },
+        "application": {
+            "prototype": "montage/core/application",
+            "properties": {
+                "delegate": {"@": "test"}
+            }
         }
-    },
-    "test": {
-        "prototype": "ui/slot-test/slot-test",
-        "properties": {
-            "element": {"#": "slotChooser"},
-            "componentWithNoElement": {"@": "dynamictext3"},
-            "componentInPageWithElement": {"@": "dynamictext1"},
-            "photoViewer": {"@": "photoviewer1"},
-            "videoViewer": {"@": "videoviewer1"},
-            "barContent": {"@": "slider2"},
-            "bazContent": {"#": "bazContent"},
-            "quxContent": {"#": "quxContent"},
-            "slot": {"@": "slot1"},
-            "componentWithNoElementButton": {"@": "button1"},
-            "componentInPageWithElementButton": {"@": "button2"},
-            "barButton": {"@": "button3"},
-            "bazButton": {"@": "button4"},
-            "quxButton": {"@": "button5"},
-            "emptyButton": {"@": "button6"},
-            "videoButton": {"@": "button7"},
-            "photoButton": {"@": "button8"}
-        }
-    },
-    "application": {
-        "prototype": "montage/core/application",
-        "properties": {
-            "delegate": {"@": "test"}
-        }
-    }
 
     }</script>
 
 
     <style type="text/css">
 
-        #slot {
-            margin: 1em;
-            padding: 2em;
-            border: 1px dotted silver;
-        }
+    #slot {
+        margin: 1em;
+        padding: 2em;
+        border: 1px dotted silver;
+    }
 
     </style>
 
 </head>
 <body>
 
-<div data-montage-id="slotChooser">
-    <button class="button" data-montage-id="componentWithNoElementButton">Show Component With No Element (Text)</button>
-    <button class="button" data-montage-id="barButton">Show Bar Component in Slot</button>
-    <button class="button" data-montage-id="componentInPageWithElementButton">Show Component In Page With Element</button>
-    <button class="button" data-montage-id="bazButton">Show Baz Element in Slot</button>
-    <button class="button" data-montage-id="quxButton">Show Qux Element in Slot</button>
-    <button class="button" data-montage-id="emptyButton">Show Nothing in Slot</button>
+    <div data-montage-id="slotChooser">
+        <button class="button" data-montage-id="componentWithNoElementButton">Show Component With No Element (Text)</button>
+        <button class="button" data-montage-id="barButton">Show Bar Component in Slot</button>
+        <button class="button" data-montage-id="componentInPageWithElementButton">Show Component In Page With Element</button>
+        <button class="button" data-montage-id="bazButton">Show Baz Element in Slot</button>
+        <button class="button" data-montage-id="quxButton">Show Qux Element in Slot</button>
+        <button class="button" data-montage-id="emptyButton">Show Nothing in Slot</button>
 
-    <button class="button" data-montage-id="videoButton">Switch to "video"</button>
-    <button class="button" data-montage-id="photoButton">Switch to "photo"</button>
-</div>
+        <button class="button" data-montage-id="videoButton">Switch to "video"</button>
+        <button class="button" data-montage-id="photoButton">Switch to "photo"</button>
+    </div>
 
-<div data-montage-id="slot">
-    <div>Content inside the slot from the template</div>
-</div>
+    <div data-montage-id="slot">
+        <div>Content inside the slot from the template</div>
+    </div>
 
-<div data-montage-id="componentInPageWithElement"></div>
+    <div data-montage-id="componentInPageWithElement"></div>
 
-<div data-montage-id="bazContent">This is some content initially outside the slot, but available to put inside the slot</div>
+    <div data-montage-id="bazContent">This is some content initially outside the slot, but available to put inside the slot</div>
 
-<div data-montage-id="quxContent">
-    <p>This is some content initially outside the slot, with a component inside, but available to put inside the slot</p>
+    <div data-montage-id="quxContent">
+        <p>This is some content initially outside the slot, with a component inside, but available to put inside the slot</p>
 
-    <div data-montage-id="slider"></div>
-</div>
+        <div data-montage-id="slider"></div>
+    </div>
 
-<div data-montage-id="sliderValue"></div>
+    <div data-montage-id="sliderValue"></div>
 
 </body>
 </html>
