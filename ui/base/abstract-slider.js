@@ -40,8 +40,8 @@ var AbstractSlider = exports.AbstractSlider = AbstractControl.specialize( /** @l
             this.addOwnPropertyChangeListener("axis", this);
             this.axis = "horizontal";
 
-            this.defineBinding( "classList.has('montage--disabled')", { "<-": "!enabled" });
-            this.defineBinding( "classList.has('montage-Slider--active')", { "<-": "active" });
+            // this.defineBinding( "classList.has('montage--disabled')", { "<-": "!enabled" });
+            // this.defineBinding( "classList.has('montage-Slider--active')", { "<-": "active" });
         }
     },
 
