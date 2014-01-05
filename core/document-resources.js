@@ -7,10 +7,12 @@ var DocumentResources = Montage.specialize({
     _document: {value: null},
     _resources: {value: null},
     _preloaded: {value: null},
+    _expectedStyles: {value: null},
 
     constructor: {
         value: function DocumentResources() {
             this.super();
+            this._expectedStyles = [];
         }
     },
 
@@ -92,8 +94,8 @@ var DocumentResources = Montage.specialize({
 
     // TODO: this should probably be in TemplateResources, need to come up with
     //       a better scheme for know what has been loaded in what document.
-    //       This change would make addStyle sync and up to whoever is adding to
-    //       listen for its proper loading.
+    //       This change would make addStyle sync and up to whoever is adding
+    //       to listen for its proper loading.
     _importScript: {
         value: function(script) {
             var self = this,
@@ -107,9 +109,9 @@ var DocumentResources = Montage.specialize({
             if (url) {
                 self._addResource(url);
                 // We wait until all scripts are loaded, this is important
-                // because templateDidLoad might need to access objects that are
-                // defined in these scripts, the downsize is that it takes more
-                // time for the template to be considered loaded.
+                // because templateDidLoad might need to access objects that
+                // are defined in these scripts, the downsize is that it takes
+                // more time for the template to be considered loaded.
                 scriptLoaded = function(event) {
                     //if (event.type === "load") {
                         self.setResourcePreloaded(url);
@@ -153,8 +155,7 @@ var DocumentResources = Montage.specialize({
 
     addStyle: {
         value: function(element) {
-            var self = this,
-                url = element.getAttribute("href"),
+            var url = element.getAttribute("href"),
                 documentHead;
 
             url = this.normalizeUrl(url);
@@ -169,21 +170,51 @@ var DocumentResources = Montage.specialize({
 
             documentHead = this._document.head;
 
+            this._expectedStyles.push(url);
             documentHead.insertBefore(element, documentHead.firstChild);
         }
     },
 
     normalizeUrl: {
         value: function(url, baseUrl) {
-            return URL.resolve(baseUrl || "http://", url);
+            if (!baseUrl) {
+                baseUrl = this._document.location.href;
+            }
+
+            return URL.resolve(baseUrl, url);
         }
     },
 
+    _schemeRegexp: {
+        // http://tools.ietf.org/html/rfc3986#section-3.1
+        value: /^[a-zA-Z][a-zA-Z0-9+\.\-]*:\/\//i
+    },
     preloadResource: {
-        value: function(url) {
+        value: function(url, force) {
+            var skipPreload;
+
+            // If the url is absolute then we give up on preloading because it
+            // is a potential x-domain request.
+            if (this._schemeRegexp.test(url)) {
+                skipPreload = true;
+            }
+
             url = this.normalizeUrl(url);
 
-            if (this.isResourcePreloaded(url)) {
+            // Never preload file:// resources, they will always be a x-domain
+            // request.
+            if (url.slice(0, 7) === "file://") {
+                skipPreload = true;
+            }
+
+            // If we force the preloading then we ignore the logic that
+            // prevents x-domain requests. A server might be configured with
+            // CORS.
+            if (skipPreload && force) {
+                skipPreload = false;
+            }
+
+            if (skipPreload || this.isResourcePreloaded(url)) {
                 return Promise.resolve();
             } else if (this.isResourcePreloading(url)) {
                 return this.getResourcePreloadedPromise(url);
@@ -228,6 +259,25 @@ var DocumentResources = Montage.specialize({
 
             return deferred.promise;
         }
+    },
+
+    areStylesLoaded: {
+        get: function() {
+            var styleSheets,
+                ix;
+
+            if (this._expectedStyles.length > 0) {
+                styleSheets = this._document.styleSheets;
+                for (var i = 0, styleSheet; styleSheet = styleSheets[i]; i++) {
+                    ix = this._expectedStyles.indexOf(styleSheet.href);
+                    if (ix >= 0) {
+                        this._expectedStyles.splice(ix, 1);
+                    }
+                }
+            }
+
+            return this._expectedStyles.length === 0;
+        }
     }
 }, {
     getInstanceForDocument: {
@@ -244,3 +294,4 @@ var DocumentResources = Montage.specialize({
 });
 
 exports.DocumentResources = DocumentResources;
+

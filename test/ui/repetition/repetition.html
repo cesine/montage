@@ -113,7 +113,7 @@ POSSIBILITY OF SUCH DAMAGE.
                     "element": {"#": "textfield1"}
                 },
                 "bindings": {
-                    "text": {"<-": "@repetition2.objectAtCurrentIteration.text"}
+                    "text": {"<-": "@repetition2:iteration.object.text"}
                 }
             },
             "repetition2": {
@@ -131,7 +131,7 @@ POSSIBILITY OF SUCH DAMAGE.
                     "element": {"#": "textfield2"}
                 },
                 "bindings": {
-                    "text": {"<-": "@repetition3.objectAtCurrentIteration.text"}
+                    "text": {"<-": "@repetition3:iteration.object.text"}
                 }
             },
             "repetition3": {
@@ -140,7 +140,7 @@ POSSIBILITY OF SUCH DAMAGE.
                     "element": {"#": "list3a"}
                 },
                 "bindings": {
-                    "content": {"<-": "@repetition4.objectAtCurrentIteration"}
+                    "content": {"<-": "@repetition4:iteration.object"}
                 }
             },
             "repetition4": {
@@ -164,7 +164,7 @@ POSSIBILITY OF SUCH DAMAGE.
                     "element": {"#": "list4a"}
                 },
                 "bindings": {
-                    "content": {"<-": "@repetition5.objectAtCurrentIteration"}
+                    "content": {"<-": "@repetition5:iteration.object"}
                 }
             },
             "repetition5": {
@@ -196,7 +196,7 @@ POSSIBILITY OF SUCH DAMAGE.
                     "element": {"#": "list5a"}
                 },
                 "bindings": {
-                    "content": {"<-": "@repetition7.objectAtCurrentIteration"}
+                    "content": {"<-": "@repetition7:iteration.object"}
                 }
             },
             "repetition7": {
@@ -226,7 +226,7 @@ POSSIBILITY OF SUCH DAMAGE.
                     "element": {"#": "list6comp1"}
                 },
                 "bindings": {
-                    "listObjects": {"<-": "@repetition9.objectAtCurrentIteration.elements1"}
+                    "listObjects": {"<-": "@repetition9:iteration.object.elements1"}
                 }
             },
             "componentrep4": {
@@ -235,7 +235,7 @@ POSSIBILITY OF SUCH DAMAGE.
                     "element": {"#": "list6comp2"}
                 },
                 "bindings": {
-                    "listObjects": {"<-": "@repetition9.objectAtCurrentIteration.elements2"}
+                    "listObjects": {"<-": "@repetition9:iteration.object.elements2"}
                 }
             },
             "repetition9": {
@@ -434,7 +434,7 @@ POSSIBILITY OF SUCH DAMAGE.
                     "element": {"#": "textfield8"}
                 },
                 "bindings": {
-                    "text": {"<-": "@repetition17.objectAtCurrentIteration"}
+                    "text": {"<-": "@repetition17:iteration.object"}
                 }
             },
             "repetition18": {
@@ -546,7 +546,85 @@ POSSIBILITY OF SUCH DAMAGE.
                     "element": {"#": "textInSubstitution"}
                 },
                 "bindings": {
-                    "value": {"<-": "@repetitionInSubstitution.objectAtCurrentIteration"}
+                    "value": {"<-": "@repetitionInSubstitution:iteration.object"}
+                }
+            },
+
+            "aliasRepetitionIteration": {
+                "prototype": "ui/repetition/alias-repetition-iteration.reel",
+                "properties": {
+                    "element": {"#": "aliasRepetitionIteration"}
+                }
+            },
+
+            "text100": {
+                "prototype": "montage/ui/text.reel",
+                "properties": {
+                    "element": {"#": "text100"}
+                },
+                "bindings": {
+                    "value": {"<-": "@aliasRepetitionIteration:i.object"}
+                }
+            },
+
+            "aliasNestedRepetitionIteration": {
+                "prototype": "ui/repetition/alias-nested-repetition-iteration.reel",
+                "properties": {
+                    "element": {"#": "aliasNestedRepetitionIteration"}
+                }
+            },
+
+            "text110": {
+                "prototype": "montage/ui/text.reel",
+                "properties": {
+                    "element": {"#": "text110"}
+                },
+                "bindings": {
+                    "value": {"<-": "@aliasNestedRepetitionIteration:i.object + '-' + @aliasNestedRepetitionIteration:j.object"}
+                }
+            },
+
+            "aliasChainedRepetitionIteration": {
+                "prototype": "ui/repetition/alias-chained-repetition-iteration.reel",
+                "properties": {
+                    "element": {"#": "aliasChainedRepetitionIteration"}
+                }
+            },
+
+            "text120": {
+                "prototype": "montage/ui/text.reel",
+                "properties": {
+                    "element": {"#": "text120"}
+                },
+                "bindings": {
+                    "value": {"<-": "@aliasChainedRepetitionIteration:i.object"}
+                }
+            },
+
+            "aliasMixedRepetitionIteration": {
+                "prototype": "ui/repetition/alias-mixed-repetition-iteration.reel",
+                "properties": {
+                    "element": {"#": "aliasMixedRepetitionIteration"}
+                }
+            },
+
+            "aliasMixedRepetitionIterationText": {
+                "prototype": "montage/ui/text.reel",
+                "properties": {
+                    "element": {"#": "aliasMixedRepetitionIterationText"}
+                },
+                "bindings": {
+                    "value": {"<-": "@aliasMixedRepetitionIteration:inner.object"}
+                }
+            },
+
+            "aliasMixedRepetitionIterationHeader": {
+                "prototype": "montage/ui/text.reel",
+                "properties": {
+                    "element": {"#": "aliasMixedRepetitionIterationHeader"}
+                },
+                "bindings": {
+                    "value": {"<-": "@aliasMixedRepetitionIteration:header.object"}
                 }
             }
 
@@ -719,6 +797,31 @@ POSSIBILITY OF SUCH DAMAGE.
                 <span data-montage-id="textInSubstitution" class="textInSubstitution"></span>
             </div>
         </div>
+    </div>
+
+    <h2>Template Properties Alias - repetition iteration</h2>
+
+    <div data-montage-id="aliasRepetitionIteration" class="aliasRepetitionIteration">
+        <div data-montage-id="text100" class="text100"></div>
+    </div>
+
+    <h2>Template Properties Alias - repetition nested iteration</h2>
+
+    <div data-montage-id="aliasNestedRepetitionIteration" class="aliasNestedRepetitionIteration">
+        <div data-montage-id="text110" class="text110"></div>
+    </div>
+
+    <h2>Template Properties Alias - chained alias</h2>
+
+    <div data-montage-id="aliasChainedRepetitionIteration" class="aliasChainedRepetitionIteration">
+        <div data-montage-id="text120" class="text120"></div>
+    </div>
+
+    <h2>Template Properties Alias - alias used, defined and instantiated in different places</h2>
+
+    <div data-montage-id="aliasMixedRepetitionIteration" class="aliasMixedRepetitionIteration">
+        <span data-arg="inner" data-montage-id="aliasMixedRepetitionIterationText" class="innerText"></span>
+        <span data-arg="header" data-montage-id="aliasMixedRepetitionIterationHeader" class="header"></span>
     </div>
 
 </body>

@@ -15,43 +15,54 @@ var Montage = require("montage").Montage,
  * @fires press
  * @fires longPress
  * @fires pressCancel
+ * @classdesc The `PressComposer` abstracts away handling mouse and touch
+ * events that represent presses, allowing generic detection of presses, long
+ * presses, and cancelled presses.
  */
 var PressComposer = exports.PressComposer = Composer.specialize(/** @lends PressComposer# */ {
 
     /**
-        Dispatched when a press begins. It is ended by either a {@link press} or
-        {@link pressCancel} event.
-
-        @event pressStart
-        @memberof PressComposer
-        @param {PressEvent} event
-    */
-
-    /**
-        Dispatched when a press is complete.
-
-        @event press
-        @memberof PressComposer
-        @param {PressEvent} event
-    */
+     * Dispatched when a press begins. It is ended by either a {@link press} or
+     * {@link pressCancel} event.
+     *
+     * @event pressStart
+     * @memberof PressComposer
+     * @param {PressEvent} event
+     */
 
     /**
-        Dispatched when a press lasts for longer than (@link longPressThreshold}
-
-        @event longPress
-        @memberof PressComposer
-        @param {PressEvent} event
-    */
+     * Dispatched when a press is complete.
+     *
+     * @event press
+     * @memberof PressComposer
+     * @param {PressEvent} event
+     */
 
     /**
-        Dispatched when a press is canceled. This could be because the pointer
-        left the element, was claimed by another component or maybe a phone call
-        came in.
+     * Dispatched when a press lasts for longer than (@link longPressThreshold}
+     * On a long press, the sequence of events will be:
+     * - pressStart: as soon as the composer recognizes it is a press.
+     * - longPress: `longPressThreshold` after the pressStart, if the press has
+     *   not yet ended.
+     * - press: when the press ends, if it isn't cancelled.
+     *
+     * Handlers of the `longPress` event can call `cancelPress` to prevent
+     * `press` being triggered.
+     *
+     * @event longPress
+     * @memberof PressComposer
+     * @param {PressEvent} event
+     */
 
-        @event pressCancel
-        @memberof PressComposer
-        @param {PressEvent} event
-    */
+    /**
+     * Dispatched when a press is canceled. This could be because the pointer
+     * left the element, was claimed by another component or maybe a phone call
+     * came in.
+     *
+     * @event pressCancel
+     * @memberof PressComposer
+     * @param {PressEvent} event
+     */
 
     // Load/unload
 
@@ -68,33 +79,33 @@ var PressComposer = exports.PressComposer = Composer.specialize(/** @lends Press
     unload: {
         value: function() {
             if (window.Touch) {
-                this._element.removeEventListener("touchstart", this);
+                this._element.removeEventListener("touchstart", this, true);
             } else {
-                this._element.removeEventListener("mousedown", this);
+                this._element.removeEventListener("mousedown", this, true);
             }
         }
     },
 
     /**
-    Delegate that implements <code>surrenderPointer</code>. See Component for
-    explanation of what this method should do.
-
-    @type {Object}
-    @default null
-    */
+     * Delegate that implements `surrenderPointer`. See Component for
+     * explanation of what this method should do.
+     *
+     * @type {Object}
+     * @default null
+     */
     delegate: {
         value: null
     },
 
 
     /**
-    Cancel the current press.
-
-    Can be used in a "longPress" event handler to prevent the "press" event
-    being fired.
-    @returns Boolean true if a press was canceled, false if the composer was
-                     already in a unpressed or canceled state.
-    */
+     * Cancel the current press.
+     *
+     * Can be used in a "longPress" event handler to prevent the "press" event
+     * being fired.
+     * @returns boolean true if a press was canceled, false if the composer was
+     * already in a unpressed or canceled state.
+     */
     cancelPress: {
         value: function() {
             if (this._state === PressComposer.PRESSED) {
@@ -146,8 +157,10 @@ var PressComposer = exports.PressComposer = Composer.specialize(/** @lends Press
         value: 1000
     },
     /**
-    How long a press has to last for a longPress event to be dispatched
-    */
+     * How long a press has to last (in milliseconds) for a longPress event to
+     * be dispatched
+     * @type number
+     */
     longPressThreshold: {
         get: function() {
             return this._longPressThreshold;
@@ -166,10 +179,6 @@ var PressComposer = exports.PressComposer = Composer.specialize(/** @lends Press
 
     // Magic
 
-    /**
-    @default null
-    @private
-    */
     _observedPointer: {
         enumerable: false,
         value: null
@@ -190,24 +199,18 @@ var PressComposer = exports.PressComposer = Composer.specialize(/** @lends Press
             var i = 0, changedTouchCount;
 
             if (event.type === "touchstart") {
-                changedTouchCount = event.changedTouches.length;
-                for (; i < changedTouchCount; i++) {
-                    if (!this.component.eventManager.componentClaimingPointer(event.changedTouches[i].identifier)) {
-                        this._observedPointer = event.changedTouches[i].identifier;
-                        break;
-                    }
-                 }
 
-                if (this._observedPointer === null) {
-                    // All touches have been claimed
-                    return false;
+                changedTouchCount = event.changedTouches.length;
+                if (changedTouchCount === 1) {
+                    this._observedPointer = event.changedTouches[0].identifier;
                 }
 
                 document.addEventListener("touchend", this, false);
                 document.addEventListener("touchcancel", this, false);
             } else if (event.type === "mousedown") {
                 this._observedPointer = "mouse";
-                // Needed to cancel the press if mouseup'd when not on the component
+                // Needed to cancel the press if mouseup'd when not on the
+                // component
                 document.addEventListener("mouseup", this, false);
                 // Needed to preventDefault if another component has claimed
                 // the pointer
@@ -226,10 +229,11 @@ var PressComposer = exports.PressComposer = Composer.specialize(/** @lends Press
     },
 
     /**
-    Decides what should be done based on an interaction.
-
-    @param {Event} event The event that caused this to be called.
-    */
+     * Decides what should be done based on an interaction.
+     *
+     * @param {Event} event The event that caused this to be called.
+     * @private
+     */
     _interpretInteraction: {
         value: function(event) {
             // TODO maybe the code should be moved out to handleClick and
@@ -273,17 +277,15 @@ var PressComposer = exports.PressComposer = Composer.specialize(/** @lends Press
     },
 
     /**
-    Remove event listeners after an interaction has finished.
-    */
+     * Remove event listeners after an interaction has finished.
+     * @private
+     */
     _endInteraction: {
         value: function(event) {
-            if (!event || event.type === "touchend" || event.type === "touchcancel") {
-                document.removeEventListener("touchend", this);
-                document.removeEventListener("touchcancel", this);
-            } else if (!event || event.type === "click" || event.type === "mouseup") {
-                document.removeEventListener("click", this);
-                document.removeEventListener("mouseup", this);
-            }
+            document.removeEventListener("touchend", this);
+            document.removeEventListener("touchcancel", this);
+            document.removeEventListener("click", this);
+            document.removeEventListener("mouseup", this);
 
             if (this.component.eventManager.isPointerClaimedByComponent(this._observedPointer, this)) {
                 this.component.eventManager.forfeitPointer(this._observedPointer, this);
@@ -294,15 +296,15 @@ var PressComposer = exports.PressComposer = Composer.specialize(/** @lends Press
     },
 
     /**
-    Checks if we are observing one of the changed touches. Returns the index
-    of the changed touch if one matches, otherwise returns false. Make sure
-    to check against <code>!== false</code> or <code>=== false</code> as the
-    matching index might be 0.
-
-    @function
-    @private
-    @returns {Number|Boolean} The index of the matching touch, or false
-    */
+     * Checks if we are observing one of the changed touches. Returns the index
+     * of the changed touch if one matches, otherwise returns false. Make sure
+     * to check against `!== false` or `=== false` as the
+     * matching index might be 0.
+     *
+     * @method
+     * @private
+     * @returns {number|boolean} The index of the matching touch, or false
+     */
     _changedTouchisObserved: {
         value: function(changedTouches) {
             if (this._observedPointer === null) {
@@ -419,10 +421,6 @@ var PressComposer = exports.PressComposer = Composer.specialize(/** @lends Press
         }
     },
 
-    /**
-    Dispatch the pressStart event
-    @private
-    */
     _dispatchPressStart: {
         enumerable: false,
         value: function (event) {
@@ -438,10 +436,6 @@ var PressComposer = exports.PressComposer = Composer.specialize(/** @lends Press
         }
     },
 
-    /**
-    Dispatch the press event
-    @private
-    */
     _dispatchPress: {
         enumerable: false,
         value: function (event) {
@@ -455,10 +449,6 @@ var PressComposer = exports.PressComposer = Composer.specialize(/** @lends Press
         }
     },
 
-    /**
-    Dispatch the long press event
-    @private
-    */
     _dispatchLongPress: {
         enumerable: false,
         value: function (event) {
@@ -469,10 +459,6 @@ var PressComposer = exports.PressComposer = Composer.specialize(/** @lends Press
         }
     },
 
-    /**
-    Dispatch the pressCancel event
-    @private
-    */
     _dispatchPressCancel: {
         enumerable: false,
         value: function (event) {
@@ -488,7 +474,12 @@ var PressComposer = exports.PressComposer = Composer.specialize(/** @lends Press
 
 });
 
-
+/*
+ * @class PressEvent
+ * @inherits MutableEvent
+ * @classdesc The event dispatched by the `PressComposer`, providing access to
+ * the raw DOM event and proxying its properties.
+ */
 var PressEvent = (function(){
     var value, eventProps, typeProps, eventPropDescriptor, typePropDescriptor, i;
 

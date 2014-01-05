@@ -245,31 +245,6 @@ TestPageLoader.queueTest("eventmanagertest/eventmanagertest", function(testPage)
                     expect(clickSpy.handleClick).toHaveBeenCalled();
                 });
             });
-             //Firefox doesn't allow objects as DOM 0 event listener
-            if (global.navigator && global.navigator.userAgent.indexOf("Firefox") === -1) {
-                it("should not interfere with inline DOM 0 event listener objects", function() {
-                    var inlineClickSpy = {
-                        handleEvent: function(event) {
-                        }
-                    };
-                    spyOn(inlineClickSpy, 'handleEvent');
-
-                    testDocument.onclick = inlineClickSpy;
-
-                    var clickSpy = {
-                        handleClick: function(event) {
-                        }
-                    };
-                    spyOn(clickSpy, 'handleClick');
-                    testDocument.addEventListener("click", clickSpy, false);
-
-                    testPage.mouseEvent(new EventInfo().initWithElement(testDocument.documentElement), "click", function() {
-                        expect(clickSpy.handleClick).toHaveBeenCalled();
-                        expect(inlineClickSpy.handleEvent).toHaveBeenCalled();
-                    });
-                });
-            }
-
 
             it("should not interfere with inline DOM 0 event listener function", function() {
 
@@ -1172,6 +1147,49 @@ TestPageLoader.queueTest("eventmanagertest/eventmanagertest", function(testPage)
                     expect(MontageReviver._unitRevivers.listeners).toHaveBeenCalled();
                 });
              });
+        });
+
+        describe("Target", function () {
+            var target, testEvent;
+            beforeEach(function () {
+                target = new Target();
+                testEvent = document.createEvent("CustomEvent");
+                testEvent.initCustomEvent("test", true, true);
+            });
+
+            describe("dispatchEvent", function () {
+                it("returns false if the preventDefault was called on the event", function () {
+                    target.addEventListener("test", function (event) {
+                        event.preventDefault();
+                    });
+
+                    expect(target.dispatchEvent(testEvent)).toBe(false);
+                });
+
+                it("returns true if the preventDefault was not called on the event", function () {
+                    target.addEventListener("test", function (event) {
+                    });
+
+                    expect(target.dispatchEvent(testEvent)).toBe(true);
+                });
+            });
+
+            describe("dispatchEventNamed", function () {
+                it("returns false if the preventDefault was called on the event", function () {
+                    target.addEventListener("test", function (event) {
+                        event.preventDefault();
+                    });
+
+                    expect(target.dispatchEventNamed("test", true, true)).toBe(false);
+                });
+
+                it("returns true if the preventDefault was not called on the event", function () {
+                    target.addEventListener("test", function (event) {
+                    });
+
+                    expect(target.dispatchEventNamed("test", true, true)).toBe(true);
+                });
+            });
         });
     });
 });

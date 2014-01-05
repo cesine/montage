@@ -156,6 +156,11 @@ describe("test/base/abstract-text-field-spec", function () {
             aTextField.draw();
             expect(aTextField.element.value).toBe("42");
         });
+        it("should display a 0 as 0 in the element", function() {
+            aTextField.value = 0;
+            aTextField.draw();
+            expect(aTextField.element.value).toEqual("0");
+        });
 
         it("should display the toString() result of an object in the element", function () {
             aTextField.value = {
@@ -213,13 +218,13 @@ describe("test/base/abstract-text-field-spec", function () {
             var listeners,
                 em = aTextField.eventManager;
 
-            listeners = em.registeredEventListenersForEventType_onTarget_("keyPress", aTextField);
+            listeners = em.registeredEventListenersForEventType_onTarget_("keyPress", aTextField._keyComposer);
 
             expect(listeners).toBeNull();
 
             aTextField.prepareForActivationEvents();
 
-            listeners = em.registeredEventListenersForEventType_onTarget_("keyPress", aTextField);
+            listeners = em.registeredEventListenersForEventType_onTarget_("keyPress", aTextField._keyComposer);
             expect(listeners[aTextField.uuid].listener).toBe(aTextField);
         });
 

@@ -96,7 +96,11 @@ describe("test/base/abstract-select-spec", function () {
         describe("value", function() {
             beforeEach(function () {
                 aSelect = new Select();
-                aSelect.content = content;
+                aSelect.content = content.slice(0);
+            });
+
+            it("should have a default value from the content", function() {
+                expect(aSelect.contentController.content).toContain(aSelect.value);
             });
 
             it("should change the selection of the content controller", function() {
@@ -119,6 +123,13 @@ describe("test/base/abstract-select-spec", function () {
                 expect(aSelect.value).toBe(content[1]);
             });
 
+            it("should change to another value when content controller's selection is removed from the content", function() {
+                aSelect.contentController.selection = [content[0]];
+                aSelect.contentController.content.delete(content[0]);
+
+                expect(aSelect.contentController.content).toContain(aSelect.value);
+            });
+
             it("should dispatch value changes when values' first value change", function() {
                 var spy = jasmine.createSpy();
 
@@ -128,6 +139,25 @@ describe("test/base/abstract-select-spec", function () {
 
                 aSelect.values = [content[1]];
                 expect(spy).toHaveBeenCalled();
+            });
+        });
+
+        describe("value with multiSelect", function() {
+            beforeEach(function () {
+                aSelect = new Select();
+                aSelect.content = content;
+                aSelect.multiSelect = true;
+            });
+
+            it("should have first of the values", function() {
+                aSelect.values = [content[1], content[2]];
+                expect(aSelect.value).toBe(content[1]);
+            });
+
+            it("should set first of the values", function() {
+                aSelect.values = [content[1], content[2]];
+                aSelect.value = content[2];
+                expect(aSelect.values).toEqual([content[2]]);
             });
         });
 
@@ -148,6 +178,8 @@ describe("test/base/abstract-select-spec", function () {
 
             it("should change the selection of the content controller when values is modifed", function() {
                 aSelect.values = [content[1]];
+                expect(aSelect.values.toArray()).toEqual([content[1]]);
+                expect(aSelect.contentController.selection.toArray()).toEqual([content[1]]);
 
                 aSelect.values.push(content[2]);
 
@@ -157,7 +189,7 @@ describe("test/base/abstract-select-spec", function () {
             });
 
             it("should change when content controller's selection change", function() {
-                aSelect.contentController.selection = [content[1], content[2]];
+                aSelect.contentController.selection.splice(0, 1, content[1], content[2]);
 
                 expect(aSelect.values.length).toBe(2);
                 expect(aSelect.values[0]).toBe(content[1]);
@@ -165,12 +197,20 @@ describe("test/base/abstract-select-spec", function () {
             });
 
             it("should change when content controller's selection is modified", function() {
-                aSelect.contentController.selection = [content[1]];
+                aSelect.contentController.selection.splice(0, 1, content[1]);
                 aSelect.contentController.selection.push(content[2]);
 
                 expect(aSelect.values.length).toBe(2);
                 expect(aSelect.values[0]).toBe(content[1]);
                 expect(aSelect.values[1]).toBe(content[2]);
+            });
+
+            it("should copy the contents when setting a new value", function() {
+                // This is needed to bind to a rangeContent()
+                aSelect.values = [content[1]];
+                aSelect.contentController.selection.push(content[2]);
+
+                expect(aSelect.values).toEqual([content[1], content[2]]);
             });
         });
 
@@ -180,11 +220,10 @@ describe("test/base/abstract-select-spec", function () {
                 aSelect.content = content;
             });
 
-            it("TODO should only have one item in the content controller's selection when multiSelect is off", function() {
+            it("should only have one item in the content controller's selection when multiSelect is off", function() {
                 aSelect.multiSelect = false;
                 aSelect.values = [content[1], content[2]];
 
-                // RangeController only changes the selection asynchronously
                 expect(aSelect.contentController.selection.length).toBe(1);
             });
 
@@ -244,7 +283,7 @@ describe("test/base/abstract-select-spec", function () {
         });
 
         it("should be requested when value is changed", function () {
-            aSelect.value = content[0];
+            aSelect.value = content[1];
             expect(aSelect.needsDraw).toBeTruthy();
         });
 
@@ -262,14 +301,14 @@ describe("test/base/abstract-select-spec", function () {
         });
 
         it("should be requested when contentController selection is changed", function () {
-            aSelect.contentController.selection = [content[1]];
+            aSelect.contentController.selection.splice(0, 2, content[1]);
             expect(aSelect.needsDraw).toBeTruthy();
         });
 
         it("should be requested when contentController selection is modified", function () {
-            aSelect.contentController.selection = [content[0]];
+            aSelect.contentController.selection.splice(0, 0, content[0]);
             aSelect.needsDraw = false;
-            aSelect.contentController.selection.push([content[1]]);
+            aSelect.contentController.selection.push(content[1]);
             expect(aSelect.needsDraw).toBeTruthy();
         });
 

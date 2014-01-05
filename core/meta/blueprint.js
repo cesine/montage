@@ -27,7 +27,7 @@ var Defaults = {
 };
 
 /**
- @class Blueprint
+ * @class Blueprint
  */
 var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */ {
 
@@ -37,14 +37,16 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
 
     constructor: {
         value: function Blueprint() {
-            this.super();
+            this.superForValue("constructor")();
+            this._eventBlueprints = [];
+            this.defineBinding("eventBlueprints", {"<-": "_eventBlueprints.concat(parent.eventBlueprints)"});
         }
     },
 
     /**
-     @function
-     @param {String} name The name of the blueprint
-     @returns this
+     * @method
+     * @param {string} name The name of the blueprint
+     * @returns this
      */
     initWithName: {
         value: function(name) {
@@ -56,10 +58,10 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     @function
-     @param {String} name TODO
-     @param {String} moduleId TODO
-     @returns itself
+     * @method
+     * @param {string} name TODO
+     * @param {string} moduleId TODO
+     * @returns itself
      */
     initWithNameAndModuleId: {
         value: Montage.deprecate(void 0, function (name) {
@@ -145,17 +147,16 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
         }
     },
 
-    /**
-     @private
-     */
     _name: {
         value: null
     },
 
     /**
-     Name of the object. The name is used to define the property on the object.
-     @function
-     @returns {String} this._name
+     * Name of the object. The name is used to define the property on the object.
+     *
+     * This is an accessor. It is not writable or observable.
+     *
+     * @type {string} this._name
      */
     name: {
         get: function() {
@@ -164,12 +165,15 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     This is the canonical way of creating managed objects prototypes.<br>
-     Newly created prototype will be blessed with all the required properties to be well behaved.
-     @function
-     @param {Object} aPrototype TODO
-     @param {String} propertyDescriptor TODO
-     @returns newPrototype
+     * This is the canonical way of creating managed objects prototypes.
+     *
+     * Newly created prototype will be blessed with all the required properties
+     * to be well behaved.
+     *
+     * @method
+     * @param {Object} aPrototype TODO
+     * @param {string} propertyDescriptor TODO
+     * @returns newPrototype
      */
     create: {
         value: function(aPrototype, propertyDescriptor) {
@@ -186,9 +190,9 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     Create a new instance of the target prototype for the blueprint.
-     @function
-     @return new instance
+     * Create a new instance of the target prototype for the blueprint.
+     * @method
+     * @return new instance
      */
     newInstance: {
         value: function() {
@@ -198,10 +202,13 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     Returns the target prototype for this blueprint.<br>
-     <b>Note: </b> This method uses the <code>customPrototype</code> property to determine if it needs to require a custom prototype or create a default prototype.
-     @function
-     @return new prototype
+     * Returns the target prototype for this blueprint.
+     *
+     * **Note:** This method uses the `customPrototype` property to determine
+     * if it needs to require a custom prototype or create a default prototype.
+     *
+     * @method
+     * @return new prototype
      */
     newInstancePrototype: {
         value: function() {
@@ -236,10 +243,11 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
         }
     },
 
-
     /**
-     * Return the blueprint object property for this blueprint</br>
+     * Return the blueprint object property for this blueprint.
+     *
      * This will return the default if none is declared.
+     *
      * @type {Property}
      * @returns {ObjectProperty} default blueprint object property
      */
@@ -254,8 +262,9 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
         }
     },
 
-    /*
-     * This is used for references only so that we can reload referenced blueprints
+    /**
+     * This is used for references only so that we can reload referenced
+     * blueprints.
      */
     blueprintInstanceModule: {
         serializable: false,
@@ -272,10 +281,10 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     The identifier is the same as the name and is used to make the
-     serialization of a blueprint humane.
-     @type {Property}
-     @default {String} this.name
+     * The identifier is the same as the name and is used to make the
+     * serialization of a blueprint humane.
+     * @type {Property}
+     * @default {string} this.name
      */
     identifier: {
         get: function() {
@@ -287,16 +296,13 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
         }
     },
 
-    /*
-    * @private
-     */
     _binder: {
         value: null
     },
 
     /**
-     @type {Property}
-     @default null
+     * @type {Property}
+     * @default null
      */
     binder: {
         serializable: false,
@@ -312,24 +318,18 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
         }
     },
 
-    /*
-     @private
-     */
     _parentReference: {
         value: null
     },
 
-    /*
-     @private
-     */
     _parent: {
         value: null
     },
 
     /**
-     Blueprint parent<br/>
-     @type {Property}
-     @default {Object} null
+     * Blueprint parent
+     * @type {Property}
+     * @default {Object} null
      */
     parent: {
         serializable: false,
@@ -348,8 +348,8 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     @type {Property}
-     @default null
+     * @type {Property}
+     * @default null
      */
     moduleId: {
         get: function () {
@@ -361,8 +361,8 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     @type {Property}
-     @default null
+     * @type {Property}
+     * @default null
      */
     prototypeName: {
         get: function () {
@@ -374,18 +374,22 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     Defines if the blueprint should use custom prototype for new instances.<br>
-     Returns <code>true</code> if the blueprint needs to require a custom prototype for creating new instances, <code>false</code> if new instance are generic prototypes.
-     @type {Boolean}
-     @default false
+     * Defines if the blueprint should use custom prototype for new
+     * instances.
+     *
+     * Returns `true` if the blueprint needs to require a custom prototype for
+     * creating new instances, `false` if new instance are generic prototypes.
+     *
+     * @type {boolean}
+     * @default false
      */
     customPrototype: {
         value: false
     },
 
     /**
-     @type {Property}
-     @default {Array} new Array()
+     * @type {Array}
+     * @default []
      */
     _propertyBlueprints: {
         value: [],
@@ -393,8 +397,8 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     @type {Property}
-     @default {Array} new Array()
+     * @type {Property}
+     * @default {Array} new Array()
      */
     propertyBlueprints: {
         get: function() {
@@ -407,9 +411,6 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
         }
     },
 
-    /**
-     @private
-     */
     _propertyBlueprintsTable: {
         value: {},
         distinct: true,
@@ -417,11 +418,14 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     Add a new property blueprint to this blueprint.<br>
-     If that property blueprint was associated with another blueprint it will be removed first.
-     @function
-     @param {String} property blueprint The property blueprint to be added.
-     @returns property blueprint
+     * Add a new property blueprint to this blueprint.
+     *
+     * If that property blueprint was associated with another blueprint it will
+     * be removed first.
+     *
+     * @method
+     * @param {string} property blueprint The property blueprint to be added.
+     * @returns property blueprint
      */
     addPropertyBlueprint: {
         value: function(propertyBlueprint) {
@@ -441,10 +445,12 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     Removes an property blueprint from the property blueprint list of this blueprint.
-     @function
-     @param {Object} property blueprint The property blueprint to be removed.
-     @returns property blueprint
+     * Removes an property blueprint from the property blueprint list of this
+     * blueprint.
+     *
+     * @method
+     * @param {Object} property blueprint The property blueprint to be removed.
+     * @returns property blueprint
      */
     removePropertyBlueprint: {
         value: function(propertyBlueprint) {
@@ -461,10 +467,12 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     * Return a new property blueprint.<br/>
-     * <b>Note: </b> This is the canonical way of creating new property blueprint in order to enable subclassing.
-     * @param {String} name name of the property blueprint to create
-     * @param {Number} cardinality name of the property blueprint to create
+     * Return a new property blueprint.
+     *
+     * **Note:** This is the canonical way of creating new property blueprint
+     * in order to enable subclassing.
+     * @param {string} name name of the property blueprint to create
+     * @param {number} cardinality name of the property blueprint to create
      */
     newPropertyBlueprint: {
         value: function(name, cardinality) {
@@ -473,10 +481,10 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     * Return a new association blueprint.<br/>
+     * Return a new association blueprint.
      * <b>Note: </b> This is the canonical way of creating new association blueprint in order to enable subclassing.
-     * @param {String} name name of the association blueprint to create
-     * @param {Number} cardinality name of the association blueprint to create
+     * @param {string} name name of the association blueprint to create
+     * @param {number} cardinality name of the association blueprint to create
      */
     newAssociationBlueprint: {
         value: function(name, cardinality) {
@@ -485,10 +493,10 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     * Return a new derived property blueprint.<br/>
+     * Return a new derived property blueprint.
      * <b>Note: </b> This is the canonical way of creating new derived property blueprint in order to enable subclassing.
-     * @param {String} name name of the derived property blueprint to create
-     * @param {Number} cardinality name of the derived property blueprint to create
+     * @param {string} name name of the derived property blueprint to create
+     * @param {number} cardinality name of the derived property blueprint to create
      */
     newDerivedPropertyBlueprint: {
         value: function(name, cardinality) {
@@ -497,10 +505,10 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     Convenience to add one property blueprint.
-     @function
-     @param {String} name Add to one property blueprint
-     @returns name
+     * Convenience to add one property blueprint.
+     * @method
+     * @param {string} name Add to one property blueprint
+     * @returns name
      */
     addToOnePropertyBlueprintNamed: {
         value: function(name) {
@@ -509,10 +517,10 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     Convenience to add many property blueprints.
-     @function
-     @param {String} name Add to many property blueprints
-     @returns names
+     * Convenience to add many property blueprints.
+     * @method
+     * @param {string} name Add to many property blueprints
+     * @returns names
      */
     addToManyPropertyBlueprintNamed: {
         value: function(name) {
@@ -521,11 +529,11 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     Convenience to add an property blueprint to one relationship.
-     @function
-     @param {String} name TODO
-     @param {String} inverse TODO
-     @returns relationship
+     * Convenience to add an property blueprint to one relationship.
+     * @method
+     * @param {string} name TODO
+     * @param {string} inverse TODO
+     * @returns relationship
      */
     addToOneAssociationBlueprintNamed: {
         value: function(name, inverse) {
@@ -539,11 +547,11 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     Convenience to add an property blueprint to many relationships.
-     @function
-     @param {String} name TODO
-     @param {String} inverse TODO
-     @returns relationship
+     * Convenience to add an property blueprint to many relationships.
+     * @method
+     * @param {string} name TODO
+     * @param {string} inverse TODO
+     * @returns relationship
      */
     addToManyAssociationBlueprintNamed: {
         value: function(name, inverse) {
@@ -557,9 +565,9 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     @function
-     @param {String} name TODO
-     @returns property blueprint
+     * @method
+     * @param {string} name TODO
+     * @returns property blueprint
      */
     propertyBlueprintForName: {
         value: function(name) {
@@ -586,15 +594,12 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
 
     },
 
-    /*
-     * @private
-     */
     _propertyBlueprintGroups: {
         distinct: true,
         value: {}
     },
 
-    /*
+    /**
      * List of properties blueprint groups names
      */
     propertyBlueprintGroups: {
@@ -610,9 +615,9 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
         }
     },
 
-    /*
+    /**
      * Returns the group associated with that name
-     * @param {String} name of the group
+     * @param {string} name of the group
      * @returns {array} property blueprint group
      */
     propertyBlueprintGroupForName: {
@@ -625,10 +630,10 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
         }
     },
 
-    /*
+    /**
      * Add a new property blueprint group.
-     * @function
-     * @param {String} name of the group
+     * @method
+     * @param {string} name of the group
      * @returns {array} new property blueprint group
      */
     addPropertyBlueprintGroupNamed: {
@@ -642,10 +647,10 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
         }
     },
 
-    /*
+    /**
      * Remove the property blueprint group.
-     * @function
-     * @param {String} name of the group to remove
+     * @method
+     * @param {string} name of the group to remove
      * @returns {array} removed property blueprint group
      */
     removePropertyBlueprintGroupNamed: {
@@ -658,12 +663,12 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
         }
     },
 
-    /*
-     * Adds a property blueprint to the group name.<br/>
+    /**
+     * Adds a property blueprint to the group name.
      * if the group does not exist creates it.
-     * @function
-     * @param {String} property to add
-     * @param {String} name of the group
+     * @method
+     * @param {string} property to add
+     * @param {string} name of the group
      * @returns {array} property blueprint group
      */
     addPropertyBlueprintToGroupNamed: {
@@ -680,11 +685,11 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
         }
     },
 
-    /*
-     * Removes a property blueprint from the group name.<br/>
-     * @function
-     * @param {String} name of the property
-     * @param {String} name of the group
+    /**
+     * Removes a property blueprint from the group name.
+     * @method
+     * @param {string} name of the property
+     * @param {string} name of the group
      * @returns {array} property blueprint group
      */
     removePropertyBlueprintFromGroupNamed: {
@@ -700,14 +705,12 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
         }
     },
 
-
     /**
-     @type {Property}
-     @default {Array} new Array()
+     * @type {Property}
+     * @default {Array} new Array()
      */
     _eventBlueprints: {
-        value: [],
-        distinct: true
+        value: null
     },
 
     /**
@@ -715,19 +718,9 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
      @default {Array} new Array()
      */
     eventBlueprints: {
-        get: function() {
-            var eventBlueprints = [];
-            eventBlueprints = eventBlueprints.concat(this._eventBlueprints);
-            if (this.parent) {
-                eventBlueprints = eventBlueprints.concat(this.parent.eventBlueprints);
-            }
-            return eventBlueprints;
-        }
+        value: null
     },
 
-    /**
-     @private
-     */
     _eventBlueprintsTable: {
         value: {},
         distinct: true,
@@ -736,18 +729,21 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
 
 
     /**
-     Add a new property blueprint to this blueprint.<br>
-     If that property blueprint was associated with another blueprint it will be removed first.
-     @function
-     @param {String} property blueprint The property blueprint to be added.
-     @returns property blueprint
+     * Add a new property blueprint to this blueprint.
+     *
+     * If that property blueprint was associated with another blueprint it will
+     * be removed first.
+     *
+     * @method
+     * @param {string} property blueprint The property blueprint to be added.
+     * @returns property blueprint
      */
     addEventBlueprint: {
         value: function(eventBlueprint) {
             if (eventBlueprint !== null && eventBlueprint.name !== null) {
                 var index = this._eventBlueprints.indexOf(eventBlueprint);
                 if (index < 0) {
-                    if ((eventBlueprint.owner !== null) && (eventBlueprint.owner !== this)) {
+                    if (eventBlueprint.owner && eventBlueprint.owner !== this) {
                         eventBlueprint.owner.removeEventBlueprint(eventBlueprint);
                     }
                     this._eventBlueprints.push(eventBlueprint);
@@ -760,10 +756,11 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     Removes an property blueprint from the property blueprint list of this blueprint.
-     @function
-     @param {Object} property blueprint The property blueprint to be removed.
-     @returns property blueprint
+     * Removes an property blueprint from the property blueprint list of this
+     * blueprint.
+     * @method
+     * @param {Object} property blueprint The property blueprint to be removed.
+     * @returns property blueprint
      */
     removeEventBlueprint: {
         value: function(eventBlueprint) {
@@ -780,9 +777,10 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     * Return a new event blueprint.<br/>
-     * <b>Note: </b> This is the canonical way of creating new event blueprint in order to enable subclassing.
-     * @param {String} name name of the event blueprint to create
+     * Return a new event blueprint.
+     * **Note:** This is the canonical way of creating new event blueprint in
+     * order to enable subclassing.
+     * @param {string} name name of the event blueprint to create
      */
     newEventBlueprint: {
         value: function(name) {
@@ -792,10 +790,10 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
 
 
     /**
-     Convenience to add an event blueprint.
-     @function
-     @param {String} name TODO
-     @returns relationship
+     * Convenience to add an event blueprint.
+     * @method
+     * @param {string} name TODO
+     * @returns relationship
      */
     addEventBlueprintNamed: {
         value: function(name, inverse) {
@@ -804,9 +802,9 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /**
-     @function
-     @param {String} name TODO
-     @returns event blueprint
+     * @method
+     * @param {string} name TODO
+     * @returns event blueprint
      */
     eventBlueprintForName: {
         value: function(name) {
@@ -834,14 +832,11 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
 
-    /**
-     * @private
-     */
     _propertyValidationRules: {
         value: {}
     },
 
-    /*
+    /**
      * Gets the list of properties validation rules
      * @return {Array} copy of the list of properties validation rules
      */
@@ -860,7 +855,7 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
 
     /*
      * Returns the properties validation rule for that name
-     * @param {String} name of the rule
+     * @param {string} name of the rule
      * @returns {PropertyDescription} property description
      */
     propertyValidationRuleForName: {
@@ -875,8 +870,8 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
 
     /*
      * Add a new properties validation rule .
-     * @function
-     * @param {String} name of the rule
+     * @method
+     * @param {string} name of the rule
      * @returns {PropertyDescription} new properties validation rule
      */
     addPropertyValidationRule: {
@@ -892,8 +887,8 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
 
     /*
      * Remove the properties validation rule  for the name.
-     * @function
-     * @param {String} name of the rule
+     * @method
+     * @param {string} name of the rule
      * @returns {PropertyDescription} removed properties validation rule
      */
     removePropertyValidationRule: {
@@ -907,9 +902,10 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
     },
 
     /*
-     * Evaluates the rules based on the object and the properties.<br/>
+     * Evaluates the rules based on the object and the properties.
      * @param {Object} object instance to evaluate the rule for
-     * @return {Array} list of message key for rule that fired. Empty array otherwise.
+     * @return {Array} list of message key for rule that fired. Empty array
+    * otherwise.
      */
     evaluateRules: {
         value: function(objectInstance) {
@@ -937,9 +933,10 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
         }, "Blueprint.getBlueprintWithModuleId", "ModuleBlueprint.getBlueprintWithModuleId")
     },
 
-    /*
+    /**
      * Creates a default blueprint with all enumerable properties.
-     * <b>Note</b>Value type are set to the string default.
+     *
+     * **Note:** Value type are set to the string default.
      */
     createDefaultBlueprintForObject:{
         value:function (object) {
@@ -978,7 +975,9 @@ var Blueprint = exports.Blueprint = Montage.specialize( /** @lends Blueprint# */
         }
     }
 });
+
 var UnknownBlueprint = Object.freeze(new Blueprint().initWithName("Unknown"));
 
 var UnknownPropertyBlueprint = Object.freeze(new PropertyBlueprint().initWithNameBlueprintAndCardinality("Unknown", null, 1));
 var UnknownEventBlueprint = Object.freeze(new EventBlueprint().initWithNameAndBlueprint("Unknown", null));
+

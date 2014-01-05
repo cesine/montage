@@ -1,10 +1,11 @@
 "use strict";
+
 /**
- @module montage/core/meta/blueprint-reference
- @requires montage/core/core
- @requires core/exception
- @requires core/promise
- @requires core/logger
+ * @module montage/core/meta/blueprint-reference
+ * @requires montage/core/core
+ * @requires core/exception
+ * @requires core/promise
+ * @requires core/logger
  */
 var Montage = require("montage").Montage;
 var Promise = require("core/promise").Promise;
@@ -19,15 +20,15 @@ exports.BlueprintReference = RemoteReference.specialize( {
 
     constructor: {
         value: function BlueprintReference() {
-            this.super();
+            this.superForValue("constructor")();
         }
     },
 
     /**
-     The identifier is the name of the binder and is used to make the serialization of binders more
-     readable.
-     @type {Property}
-     @default {String} this.name
+     * The identifier is the name of the binder and is used to make the
+     * serialization of binders more readable.
+     * @type {Property}
+     * @default {string} this.name
      */
     identifier: {
         get: function() {
@@ -86,3 +87,4 @@ exports.BlueprintReference = RemoteReference.specialize( {
     }
 
 });
+

@@ -1,34 +1,3 @@
-/* <copyright>
-Copyright (c) 2012, Motorola Mobility LLC.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice,
-  this list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-
-* Neither the name of Motorola Mobility LLC nor the names of its
-  contributors may be used to endorse or promote products derived from this
-  software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
-</copyright> */
-/*global Element */
 /**
  @module montage
  @requires core/shim/object
@@ -65,18 +34,25 @@ var Array_prototype = Array.prototype;
 
 var Object_prototype = Object.prototype;
 
-// The CONSTRUCTOR_COMPATIBILITY flag marks areas that allow the migration from Montage.create to Constructor.specialize
-// The following is done:
-// - Any properties defined on the prototype that are used on the constructor fire a deperecation warning prompting the
-//   developer to move them to the second argument of specialize().
+// The CONSTRUCTOR_COMPATIBILITY flag marks areas that allow the migration from
+// Montage.create to Constructor.specialize The following is done:
+// - Any properties defined on the prototype that are used on the constructor
+//   fire a deperecation warning prompting the developer to move them to the
+//   second argument of specialize().
 // - Adds a create method to the constructor can be used as Proto.create().
-// - Adds support for 'didCreate' so that it can be used interchangeably with the 'constructor' property.
-// - When calling Montage.create with a function as the first argument we use the function as a constructor or call
-//   specialize on it to create a subtype.
+// - Adds support for 'didCreate' so that it can be used interchangeably with
+//   the 'constructor' property.
+// - When calling Montage.create with a function as the first argument we use
+//   the function as a constructor or call specialize on it to create a
+//   subtype.
 var CONSTRUCTOR_COMPATIBILITY = true;
 
 /**
- @class Montage
+ * The Montage constructor provides conveniences for sub-typing
+ * ([specialize]{@link Montage.specialize}) and common methods for Montage
+ * prototype chains.
+ * @class Montage
+ * @classdesc The basis of all types using the MontageJS framework.
  */
 var Montage = exports.Montage = function Montage() {};
 
@@ -128,6 +104,23 @@ var PROTO_IS_SUPPORTED = {}.__proto__ === Object.prototype;
 var PROTO_PROPERTIES_BLACKLIST = {"_montage_metadata": 1, "__state__": 1};
 var FUNCTION_PROPERTIES = Object.getOwnPropertyNames(Function);
 
+/**
+ * Customizes a type with idiomatic JavaScript constructor and prototype
+ * inheritance, using ECMAScript 5 property descriptors with customizations
+ * for common usage in MontageJS.
+ *
+ * See {@link Montage.defineProperty}
+ * @method Montage.specialize
+ * @param {Object} prototypeProperties a object mapping property names to
+ * customized Montage property descriptors, to be applied to the new
+ * prototype
+ * @param {?Object} constructorProperties a object mapping property names to
+ * customized Montage property descriptors, to be applied to the new
+ * constructor
+ * @return {function} a constructor function for the new type, which
+ * derrives prototypically from `this`, with a prototype that inherits
+ * `this.prototype`, with the given property descriptors applied.
+ */
 Object.defineProperty(Montage, "specialize", {
     value: function specialize(prototypeProperties, constructorProperties) {
         var constructor, prototype, names, propertyName, property, i, constructorProperty,
@@ -145,7 +138,8 @@ Object.defineProperty(Montage, "specialize", {
             //constructor = prototypeProperties.didCreate.value;
         } else {
             constructor = function Anonymous() {
-                return parent.apply(this, arguments) || this;
+                return this.superForValue("constructor")() || this;
+                //return parent.apply(this, arguments) || this;
             };
         }
         if (PROTO_IS_SUPPORTED) {
@@ -259,7 +253,10 @@ Object.defineProperty(Montage, "specialize", {
             value: true,
             enumerable: false
         });
-
+        Montage.defineProperty(constructor, "_superCache", {
+            value: {},
+            enumerable: false
+        });
         constructor.prototype = prototype;
         Montage.defineProperty(prototype, "constructor", {
             value: constructor,
@@ -285,23 +282,7 @@ if (!PROTO_IS_SUPPORTED) {
     };
 }
 
-/**
-    Creates a new Montage object.
-    @function Montage.create
-    @param {Object} aPrototype The prototype object to create the new object from. If not specified, the prototype is the Montage prototype.
-    @param {Object} [propertyDescriptor] An object that contains the initial properties and values for the new object.
-    @returns The new object
-    @example
-    <caption>Creating a "empty" Montage object, using Montage as the prototype</caption>
-    var alpha = Montage.create();
-    @example
-    <caption>Creating a new Montage component with a property descriptor object.</caption>
-    var Button = Component.specialize( {
-        state: {
-            value: null
-        }
-    });
-*/
+// DEPRECATED
 Object.defineProperty(Montage, "create", {
     configurable: true,
     value: function(aPrototype, propertyDescriptors) {
@@ -333,8 +314,8 @@ var extendedPropertyAttributes = [SERIALIZABLE];
 
 // Extended property attributes, the property name format is "_" + attributeName + "AttributeProperties"
 /**
-@member external:Object#extendedPropertyAttributes
-*/
+ * @member external:Object#extendedPropertyAttributes
+ */
 extendedPropertyAttributes.forEach(function(name) {
     Object.defineProperty(Object.prototype, UNDERSCORE + name + ATTRIBUTE_PROPERTIES, {
         enumerable: false,
@@ -345,19 +326,35 @@ extendedPropertyAttributes.forEach(function(name) {
 });
 
 /**
-    Defines a property on a Montage object.
-    @function Montage.defineProperty
-    @param {Object} obj The object on which to define the property.
-    @param {String} prop The name of the property to define, or modify.
-    @param {Object} descriptor A descriptor object that defines the properties being defined or modified.
-    @example
-    Montage.defineProperty(Object.prototype, "_eventListenerDescriptors", {
-        enumerable: true | false,
-        serializable: "reference" | "value" | "auto" | false,
-        value: null,
-        writable: true | false
-    });
-*/
+ * Defines a property on an object using a Montage property descriptor.
+ * Montage property descriptors extend and slightly vary ECMAScript 5 property
+ * descriptors.
+ *
+ *  - `value`
+ *  - `get`
+ *  - `set`
+ *  - `enumerable` is `true` by default, but `false` if `value` is a function
+ *  - `writable` is `true` by default, but `false` if the `name` begins with
+ *    an underscore, `_`.
+ *  - `configurable` is `true` by default
+ *  - `distinct` is deprecated, but conveys the intention that the `value`
+ *    should be duplicated for each instance, but the means of cloning is
+ *    ill-defined and temperamental.
+ *
+ * @function Montage.defineProperty
+ * @method Montage.defineProperty
+ * @param {Object} object The object on which to define the property.
+ * @param {string} name The name of the property to define, or modify.
+ * @param {Object} descriptor A descriptor object that defines the properties
+ * being defined or modified.
+ * @example
+ * Montage.defineProperty(Object.prototype, "_eventListenerDescriptors", {
+ *     enumerable: true | false,
+ *     serializable: "reference" | "value" | "auto" | false,
+ *     value: null,
+ *     writable: true | false
+ * });
+ */
 Object.defineProperty(Montage, "defineProperty", {
 
     value: function(obj, prop, descriptor) {
@@ -368,7 +365,7 @@ Object.defineProperty(Montage, "defineProperty", {
         var isValueDescriptor = (VALUE in descriptor);
 
         if (DISTINCT in descriptor && !isValueDescriptor) {
-            throw ("Cannot use distinct attribute on non-value property '" + prop + "'");
+            throw new TypeError("Cannot use distinct attribute on non-value property '" + prop + "'");
         }
 
 
@@ -592,16 +589,39 @@ Object.defineProperty(Montage, "defineProperty", {
             })(prop, UNDERSCORE + prop, descriptor.value, obj);
 
         } else {
+            // clear the cache in any descendants that use this property for super()
+            var superDependencies, i, j;
+            if (obj._superDependencies) {
+                if (typeof descriptor.value === "function" && (superDependencies = obj._superDependencies[prop + ".value"])) {
+                    for (i=0,j=superDependencies.length;i<j;i++) {
+                        delete superDependencies[i]._superCache[prop + ".value"];
+                    }
+                }
+                if (typeof descriptor.get === "function" && (superDependencies = obj._superDependencies[prop + ".get"])) {
+                    for (i=0,j=superDependencies.length;i<j;i++) {
+                        delete superDependencies[i]._superCache[prop + ".get"];
+                    }
+                }
+                if (typeof descriptor.set === "function" && (superDependencies = obj._superDependencies[prop + ".set"])) {
+                    for (i=0,j=superDependencies.length;i<j;i++) {
+                        delete superDependencies[i]._superCache[prop + ".set"];
+                    }
+                }
+            }
+
             return Object.defineProperty(obj, prop, descriptor);
         }
     }});
 
 /**
-    Description Defines one or more new properties to an object, or modifies existing properties on the object.
-    @function Montage.defineProperties
-    @param {Object} obj The object to which the properties are added.
-    @param {Object} properties An object that contains one or more property descriptor objects.
-*/
+ * Defines one or more new properties to an object, or modifies existing
+ * properties on the object.
+ * @see {@link Montage.defineProperty}
+ * @function Montage.defineProperties
+ * @param {Object} object The object to which the properties are added.
+ * @param {Object} properties An object that maps names to Montage property
+ * descriptors.
+ */
 Object.defineProperty(Montage, "defineProperties", {value: function(obj, properties) {
     if (typeof properties !== "object" || properties === null) {
         throw new TypeError("Properties must be an object, not '" + properties + "'");
@@ -650,58 +670,236 @@ Montage.defineProperty(Montage, "didCreate", {
 });
 
 var getSuper = function(object, method) {
-    var propertyNames, propertyName, property, i, propCount, func, superFunction, superProperty;
-    while (typeof superFunction === "undefined" && object !== null) {
-        propertyNames = Object.getOwnPropertyNames(object);
-        i = 0;
-        propCount = propertyNames.length;
-        for (i; i < propCount; i++) {
-            propertyName = propertyNames[i];
-            property = Object.getOwnPropertyDescriptor(object, propertyName);
-            if ((func = property.value) != null) {
-                if (func === method || (func.deprecatedFunction && func.deprecatedFunction === method)) {
-                    superProperty = Object.getPropertyDescriptor(Object.getPrototypeOf(object), propertyName)
-                    superFunction = superProperty ? superProperty.value : null;
-                    break;
+    var propertyNames, proto, i, propCount, propertyName, func, context, foundSuper, property;
+    if (!(method._superPropertyName && method._superPropertyType)) {
+        Montage.defineProperty(method, "_superPropertyType", {value:null});
+        Montage.defineProperty(method, "_superPropertyName", {value:null});
+        context = object;
+        while (!foundSuper && context !== null) {
+            propertyNames = Object.getOwnPropertyNames(context);
+            proto = Object.getPrototypeOf(context);
+            i = 0;
+            propCount = propertyNames.length;
+            for (i; i < propCount; i++) {
+                propertyName = propertyNames[i];
+                property = Object.getOwnPropertyDescriptor(context, propertyName);
+                if ((func = property.value) != null) {
+                    if (func === method || func.deprecatedFunction === method) {
+                        method._superPropertyType = "value";
+                        method._superPropertyName = propertyName;
+                        foundSuper = true;
+                        break;
+                    }
                 }
-            } else if ((func = property.get) != null) {
-                if (func === method || (func.deprecatedFunction && func.deprecatedFunction === method)) {
-                    superProperty = Object.getPropertyDescriptor(Object.getPrototypeOf(object), propertyName)
-                    superFunction = superProperty ? superProperty.get : null;
-                    break;
+                if ((func = property.get) != null) {
+                    if (func === method || func.deprecatedFunction === method) {
+                        method._superPropertyType = "get";
+                        method._superPropertyName = propertyName;
+                        foundSuper = true;
+                        break;
+                    }
                 }
-            } else if ((func = property.set) != null) {
-                if (func === method || (func.deprecatedFunction && func.deprecatedFunction === method)) {
-                    superProperty = Object.getPropertyDescriptor(Object.getPrototypeOf(object), propertyName)
-                    superFunction = superProperty ? superProperty.set : null;
-                    break;
+                if ((func = property.set) != null) {
+                    if (func === method || func.deprecatedFunction === method) {
+                        method._superPropertyType = "set";
+                        method._superPropertyName = propertyName;
+                        foundSuper = true;
+                        break;
+                    }
                 }
             }
+            context = proto;
         }
-        object = Object.getPrototypeOf(object)
     }
-    return superFunction;
-}
+    return superForImplementation(object, method._superPropertyType, method._superPropertyName);
+};
 
 
 var superImplementation = function super_() {
+    if (typeof superImplementation.caller !== "function") {
+        throw new TypeError("Can't get super without caller. Use this.superForValue(methodName) if using strict mode.");
+    }
     var superFunction = getSuper(this, superImplementation.caller);
-    return typeof superFunction === "function" ? getSuper(this, superImplementation.caller).bind(this) : Function.noop;
+    return typeof superFunction === "function" ? superFunction.bind(this) : Function.noop;
 };
 
+var superForImplementation = function (object, propertyType, propertyName) {
+    var superFunction, superObject, property, cacheObject, boundSuper,
+        context = object,
+        cacheId = propertyName + "." + propertyType;
+
+    if (!object._superContext) {
+        Montage.defineProperty(object, "_superContext", {
+            value: {}
+        });
+    }
+    // is there a super context for this call? I.e. does the super() call originate in an ancestor of object?
+    // If so, we use that object as the starting point (context) when looking for the super method.
+    if (object._superContext[cacheId]) {
+        context = object._superContext[cacheId];
+    } else {
+        // find out where in the prototype chain the calling function belongs
+        context = object;
+        while (context !== null) {
+            if (context.hasOwnProperty(propertyName)) {
+                property = Object.getOwnPropertyDescriptor(context, propertyName);
+                if (typeof property[propertyType] === "function") {
+                    break;
+                }
+            }
+            context = Object.getPrototypeOf(context);
+        }
+    }
+
+    cacheObject = context.constructor;
+
+    // is the super for this method in the cache?
+    if (cacheObject._superCache && cacheObject._superCache[cacheId]) {
+        boundSuper = (function(cacheId, object, superObject, superFunction) {
+            return function() {
+                object._superContext[cacheId] = superObject;
+                var retVal = superFunction.apply(object, arguments);
+                delete object._superContext[cacheId];
+                return retVal;
+            };
+        })(cacheId, object, cacheObject._superCache[cacheId].owner, cacheObject._superCache[cacheId].func);
+        return boundSuper;
+    }
+
+    // search the prototype chain for a parent that has a matching method
+    superObject = context;
+    while (typeof superFunction === "undefined" && (superObject = Object.getPrototypeOf(superObject))) {
+        if (!superObject._superDependencies) {
+            Montage.defineProperty(superObject, "_superDependencies", {
+                value: {}
+            });
+        }
+        if (!superObject._superDependencies[cacheId]) {
+            superObject._superDependencies[cacheId] = [];
+        }
+        superObject._superDependencies[cacheId].push(cacheObject);
+        property = Object.getOwnPropertyDescriptor(superObject, propertyName);
+        if (property) {
+            if (typeof property[propertyType] === "function") {
+                superFunction = property[propertyType];
+                break;
+            } else {
+                // parent has property but not the right type
+                break;
+            }
+        }
+    }
+
+    if (typeof superFunction === "function") {
+        // we wrap the super method in a function that saves the context on the object
+        // and immediately clears it again after the super has been called. This is needed
+        // in case superFunction also calls superFor*() so superForImplementation() knows
+        // which object owns the calling method.
+        boundSuper = (function(cacheId, object, superObject, superFunction) {
+            return function() {
+                object._superContext[cacheId] = superObject;
+                var retVal = superFunction.apply(object, arguments);
+                delete object._superContext[cacheId];
+                return retVal;
+            };
+        })(cacheId, object, superObject, superFunction);
+
+        if (!cacheObject._superCache) {
+            Montage.defineProperty(cacheObject, "_superCache", {
+                value: {}
+            });
+        }
+
+        // cache the super and the object we found it on
+        cacheObject._superCache[cacheId] = {
+            func: superFunction,
+            owner: superObject
+        };
+        return boundSuper;
+    } else {
+        return Function.noop;
+    }
+};
+
+var superForValueImplementation = function (propertyName) {
+    return superForImplementation(this, "value", propertyName);
+};
+var superForGetImplementation = function (propertyName) {
+    return superForImplementation(this, "get", propertyName);
+};
+var superForSetImplementation = function (propertyName) {
+    return superForImplementation(this, "set", propertyName);
+};
+
+/**
+ * Calls the method with the same name as the caller from the parent of the
+ * constructor that contains the caller, falling back to a no-op if no such
+ * method exists.
+ * @method Montage.super
+ * @return {function} this constructor’s parent constructor.
+ */
 Montage.defineProperty(Montage, "super", {
-    get: superImplementation
-});
-Montage.defineProperty(Montage.prototype, "super", {
-    get: superImplementation
+    get: superImplementation,
+    enumerable: false
 });
 
 /**
-    Returns the names of serializable properties belonging to Montage object.
-    @function Montage.getSerializablePropertyNames
-    @param {Object} anObject A Montage object.
-    @returns {Array} An array containing the names of the serializable properties belonging to <code>anObject</code>.
-*/
+ * Calls the method with the same name as the caller from the parent of the
+ * prototype that contains the caller, falling back to a no-op if no such
+ * method exists.
+ */
+Montage.defineProperty(Montage.prototype, "super", {
+    get: superImplementation,
+    enumerable: false
+});
+
+/**
+ * Calls the method with the given name from the parent of the constructor that
+ * contains the caller, falling backto no-op if no such method exists.
+ * @param {string} name
+ * @param ...arguments to forward to the parent method
+ */
+Montage.defineProperty(Montage, "superForValue", {
+    value: superForValueImplementation,
+    enumerable: false
+});
+
+/**
+ * Calls the method with the given name from the parent of the prototype that
+ * contains the caller, falling backto no-op if no such method exists.
+ * @param {string} name
+ * @param ...arguments to forward to the parent method
+ */
+Montage.defineProperty(Montage.prototype, "superForValue", {
+    value: superForValueImplementation,
+    enumerable: false
+});
+
+Montage.defineProperty(Montage, "superForGet", {
+    value: superForGetImplementation,
+    enumerable: false
+});
+Montage.defineProperty(Montage.prototype, "superForGet", {
+    value: superForGetImplementation,
+    enumerable: false
+});
+
+Montage.defineProperty(Montage, "superForSet", {
+    value: superForSetImplementation,
+    enumerable: false
+});
+Montage.defineProperty(Montage.prototype, "superForSet", {
+    value: superForSetImplementation,
+    enumerable: false
+});
+
+/**
+ * Returns the names of serializable properties belonging to Montage object.
+ * @function Montage.getSerializablePropertyNames
+ * @param {Object} anObject A Montage object.
+ * @returns {Array} An array containing the names of the serializable
+ * properties belonging to `anObject`.
+ */
 Montage.defineProperty(Montage, "getSerializablePropertyNames", {value: function(anObject) {
 
     var propertyNames = [],
@@ -722,8 +920,9 @@ Montage.defineProperty(Montage, "getSerializablePropertyNames", {value: function
     Returns the attribute of a property belonging to an object.
     @function Montage.getPropertyAttribute
     @param {Object} anObject A object.
-    @param {String} propertyName The name of a property belonging to <code>anObject</code>.
-    @param {String} attributeName The name of a property's attribute.
+    @param {string} propertyName The name of a property belonging to
+    `anObject`.
+    @param {string} attributeName The name of a property's attribute.
     @returns attributes array
 */
 Montage.defineProperty(Montage, "getPropertyAttribute", {value: function(anObject, propertyName, attributeName) {
@@ -739,7 +938,7 @@ Montage.defineProperty(Montage, "getPropertyAttribute", {value: function(anObjec
 /**
     @function Montage.getPropertyAttributes
     @param {Object} anObject An object.
-    @param {String} attributeName The attribute name.
+    @param {string} attributeName The attribute name.
     @returns {Object} TODO getPropertyAttributes returns description
 */
 Montage.defineProperty(Montage, "getPropertyAttributes", {value: function(anObject, attributeName) {
@@ -865,8 +1064,19 @@ var uuidGetGenerator = function() {
         // NOTE Safari (as of Version 5.0.2 (6533.18.5, r78685)
         // doesn't seem to allow redefining an existing property on a DOM Element
         // Still want to redefine the property where possible for speed
-        this._uuid = uuid;
     }
+
+    // NOTE Safari (as of Version 6.1 8537.71) has a bug related to ES5
+    // property values. In some situations, even when the uuid has already
+    // been defined as a property value, accessing the uuid of an object can
+    // make it go through the defaultUuidGet as if the property descriptor
+    // was still the original one. When that happens, a new uuid is created
+    // for that object. To avoid this, we always make sure that the object
+    // has a _uuid that will be looked up at defaultUuidGet() before
+    // generating a new one. This mechanism was created to work around an
+    // issue with Safari that didn't allow redefining property descriptors
+    // in DOM elements.
+    this._uuid = uuid;
 
     return uuid;
 };
@@ -906,29 +1116,30 @@ Montage.defineProperty(Montage.prototype, "identifier", {
 });
 
 /**
-    Returns true if two objects are equal, otherwise returns false.
-    @function Montage.equals
-    @param {Object} anObject The object to compare for equality.
-    @returns {Boolean} Returns <code>true</code> if the calling object and
-    <code>anObject</code> are identical and their <code>uuid</code> properties
-    are also equal. Otherwise, returns <code>false</code>.
-*/
+ * Returns true if two objects are equal, otherwise returns false.
+ * @method Montage#equals
+ * @param {Object} anObject The object to compare for equality.
+ * @returns {boolean} Returns `true` if the calling object and
+ * `anObject` are identical and their `uuid` properties
+ * are also equal. Otherwise, returns `false`.
+ */
 Montage.defineProperty(Montage.prototype, "equals", {
     value: function(anObject) {
         if (!anObject) return false;
         return this === anObject || this.uuid === anObject.uuid;
     }
 });
+
 Montage.defineProperty(Montage, "equals", {
     value: Montage.prototype.equals
 });
 
-/*
-    This method calls the method named with the identifier prefix if it exists.
-    Example: If the name parameter is "shouldDoSomething" and the caller's identifier is "bob", then
-    this method will try and call "bobShouldDoSomething"
-    @function callDelegateMethod
-    @param {string} name
+/**
+ * This method calls the method named with the identifier prefix if it exists.
+ * Example: If the name parameter is "shouldDoSomething" and the caller's identifier is "bob", then
+ * this method will try and call "bobShouldDoSomething"
+ * @method Montage#callDelegateMethod
+ * @param {string} name
 */
 Montage.defineProperty(Montage.prototype, "callDelegateMethod", {
     value: function(name) {
@@ -1045,3 +1256,4 @@ exports._blueprintDescriptor = {
         });
     }
 };
+

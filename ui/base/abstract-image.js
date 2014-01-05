@@ -1,7 +1,7 @@
 /*global require, exports*/
 
 /**
- @module montage/ui/base/abstract-image.reel
+ * @module montage/ui/base/abstract-image.reel
  */
 var Montage = require("montage").Montage,
     Component = require("ui/component").Component,
@@ -13,9 +13,6 @@ var Montage = require("montage").Montage,
  */
 var AbstractImage = exports.AbstractImage = Component.specialize( /** @lends AbstractImage# */ {
 
-    /**
-     * @private
-     */
     constructor: {
         value: function AbstractImage() {
             if(this.constructor === AbstractImage) {
@@ -67,8 +64,8 @@ var AbstractImage = exports.AbstractImage = Component.specialize( /** @lends Abs
     },
 
     // Invalid source is set when the src property is a relative location that
-    // the image was not able to rebase using the templates baseUrl or any other
-    // means. It can also mean that there is no src.
+    // the image was not able to rebase using the templates baseUrl or any
+    // other means. It can also mean that there is no src.
     _isInvalidSrc: {
         value: true
     },
@@ -92,6 +89,22 @@ var AbstractImage = exports.AbstractImage = Component.specialize( /** @lends Abs
         },
         get: function() {
             return this._textAlternative;
+        }
+    },
+
+    _crossOrigin: {
+        value: null
+    },
+
+    crossOrigin: {
+        set: function(value) {
+            if (value !== this._crossOrigin) {
+                this._crossOrigin = value;
+                this.needsDraw = true;
+            }
+        },
+        get: function() {
+            return this._crossOrigin;
         }
     },
 
@@ -144,11 +157,27 @@ var AbstractImage = exports.AbstractImage = Component.specialize( /** @lends Abs
 
     draw: {
         value: function() {
+            var src;
+
             if (this._isLoadingImage || this._isInvalidSrc) {
-                this.element.src = this.emptyImageSrc;
+                src = this.emptyImageSrc;
             } else {
-                this.element.src = this._src;
+                src = this._src;
             }
+
+            // data: procotol is considered local and fires a CORS exception
+            // when loaded in a non-localhost configuration because it doesn't
+            // have the necessary properties for a cross-request.
+            // From the spec it seems there is a special case for data: URLs
+            // but at least Chrome seems to behave differently.
+            // http://www.whatwg.org/specs/web-apps/current-work/multipage/fetching-resources.html#cors-settings-attribute
+            if (this._crossOrigin == null || src.slice(0, 5) === "data:") {
+                this.element.removeAttribute("crossorigin");
+            } else {
+                this.element.setAttribute("crossorigin", this._crossOrigin);
+            }
+
+            this.element.src = src;
             this.element.setAttribute("aria-label", this._textAlternative);
         }
     },
@@ -160,3 +189,4 @@ var AbstractImage = exports.AbstractImage = Component.specialize( /** @lends Abs
         }
     }
 });
+

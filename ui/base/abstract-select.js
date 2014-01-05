@@ -1,7 +1,7 @@
 /*global require, exports*/
 
 /**
- @module montage/ui/base/abstract-select.reel
+ * @module montage/ui/base/abstract-select.reel
  */
 var Montage = require("montage").Montage,
     AbstractControl = require("ui/base/abstract-control").AbstractControl,
@@ -18,7 +18,8 @@ var Montage = require("montage").Montage,
 var AbstractSelect = exports.AbstractSelect = AbstractControl.specialize( /** @lends AbstractSelect# */ {
 
     /**
-     * Dispatched when the select is changed through a mouse click or finger tap.
+     * Dispatched when the select is changed through a mouse click or finger
+     * tap.
      * @event action
      * @memberof AbstractSelect
      * @param {Event} event
@@ -36,18 +37,19 @@ var AbstractSelect = exports.AbstractSelect = AbstractControl.specialize( /** @l
             this._pressComposer = new PressComposer();
             this.addComposer(this._pressComposer);
             this.contentController = new RangeController();
-            this._values = [];
 
             this.defineBindings({
                 "content": {
                     "<->": "contentController.content"
                 },
                 "values": {
-                    "<->": "contentController.selection"
+                    "<->": "contentController.selection.rangeContent()"
                 },
-                "value": {
-                    "<->": "values.0"
-                },
+                // FIXME: due to issues with 2 way bindings with rangeContent()
+                // we aren't currently able to have this "value" binding.
+                // "value": {
+                //     "<->": "values.one()"
+                // },
                 "contentController.multiSelect": {
                     "<-": "multiSelect"
                 },
@@ -62,15 +64,17 @@ var AbstractSelect = exports.AbstractSelect = AbstractControl.specialize( /** @l
 
             // Need to draw when "content" or "values" change
             this.addRangeAtPathChangeListener("content", this, "handleContentRangeChange");
+            // TODO: "value" <-> "values.one()"
             this.addRangeAtPathChangeListener("values", this, "handleValuesRangeChange");
             this.classList.add("matte-Select");
         }
     },
 
     /**
-     * Enables or disables the Select from user input. When this property is set to `false`,
-     * the "montage--disabled" CSS style is applied to the select's DOM element during the next draw cycle. When set to
-     * `true` the "disabled" CSS class is removed from the element's class list.
+     * Enables or disables the Select from user input. When this property is
+     * set to `false`, the "montage--disabled" CSS style is applied to the
+     * select's DOM element during the next draw cycle. When set to `true` the
+     * "disabled" CSS class is removed from the element's class list.
      * @type {boolean}
      */
     enabled: {
@@ -127,6 +131,10 @@ var AbstractSelect = exports.AbstractSelect = AbstractControl.specialize( /** @l
         set: function(value) {
             if (value !== this._value) {
                 this._value = value;
+                // TODO: "value" <-> "values.one()"
+                if (this.values[0] !== value) {
+                    this.values.splice(0, this.values.length, value);
+                }
                 this.needsDraw = true;
             }
         }
@@ -141,7 +149,22 @@ var AbstractSelect = exports.AbstractSelect = AbstractControl.specialize( /** @l
             return this._values;
         },
         set: function(value) {
-            this._values = value;
+            // When a property is bound to a rangeContent() we can't change the
+            // reference of the property because the binding will not work
+            // anymore (MON-444).
+            if (this._values) {
+                // We can't change the value reference because it is bound to a
+                // rangeContent(), instead we just replace its entire contents
+                // with the contents of the value given.
+                var args = [0, this._values.length].concat(value);
+                this._values.splice.apply(this._values, args);
+            } else {
+                // This is the only time when we actually set the values
+                // property. It is the value given when establishing the binding
+                // to rangeContent() in the constructor.
+                this._values = value;
+            }
+
             this.needsDraw = true;
         }
     },
@@ -165,7 +188,7 @@ var AbstractSelect = exports.AbstractSelect = AbstractControl.specialize( /** @l
     // Handlers
 
     /**
-     Called when the user starts interacting with the component.
+     * Called when the user starts interacting with the component.
      */
     handlePressStart: {
         value: function(event) {
@@ -180,7 +203,7 @@ var AbstractSelect = exports.AbstractSelect = AbstractControl.specialize( /** @l
     },
 
     /**
-     Called when the user has interacted with the select.
+     * Called when the user has interacted with the select.
      */
     handlePress: {
         value: function(event) {
@@ -196,8 +219,8 @@ var AbstractSelect = exports.AbstractSelect = AbstractControl.specialize( /** @l
     },
 
     /**
-     Called when all interaction is over.
-     @private
+     * Called when all interaction is over.
+     * @private
      */
     handlePressCancel: {
         value: function(event) {
@@ -214,6 +237,16 @@ var AbstractSelect = exports.AbstractSelect = AbstractControl.specialize( /** @l
 
     handleContentRangeChange: {
         value: function() {
+            // When the content changes we need to update the "value" if none is
+            // set (new content) or if the previous "value" was removed in this
+            // range change.
+            // FIXME: we only operate on the selection and not on the "values"
+            // to avoid issues with 2-way binding to rangeContent().
+            if (this.contentController.selection.length === 0 &&
+                this.contentController.organizedContent.length > 0) {
+                this.contentController.selection.push(this.contentController.organizedContent[0]);
+            }
+
             this._contentIsDirty = true;
             this.needsDraw = true;
         }
@@ -221,6 +254,10 @@ var AbstractSelect = exports.AbstractSelect = AbstractControl.specialize( /** @l
 
     handleValuesRangeChange: {
         value: function() {
+            // TODO: "value" <-> "values.one()"
+            if (this.values.length > 0) {
+                this.value = this.values.one();
+            }
             this.needsDraw = true;
         }
     },
@@ -232,4 +269,6 @@ var AbstractSelect = exports.AbstractSelect = AbstractControl.specialize( /** @l
             }
         }
     }
+
 });
+

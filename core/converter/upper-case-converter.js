@@ -1,5 +1,3 @@
-/* <copyright>
-</copyright> */
 /**
  * @module montage/core/converter/upper-case-converter
  * @requires montage/core/core
@@ -28,9 +26,9 @@ exports.UpperCaseConverter = Converter.specialize( /** @lends UpperCaseConverter
 
     /**
      * Converts the specified string to all upper case letters.
-     * @function
-     * @param {String} v The string to convert.
-     * @returns {String} The converted string.
+     * @method
+     * @param {string} v The string to convert.
+     * @returns {string} The converted string.
      */
     convert: {value: function(v) {
         return this._convert(v);
@@ -38,11 +36,12 @@ exports.UpperCaseConverter = Converter.specialize( /** @lends UpperCaseConverter
 
     /**
      * Reverts the specified string.
-     * @function
-     * @param {String} v The specified string.
-     * @returns {String}
+     * @method
+     * @param {string} v The specified string.
+     * @returns {string}
      */
     revert: {value: function(v) {
         return this._convert(v);
     }}
 });
+

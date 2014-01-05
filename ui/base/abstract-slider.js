@@ -1,12 +1,13 @@
 /*global require, exports, window*/
 
 /**
- @module montage/ui/base/abstract-slider.reel
- @requires montage/core/core
- @requires montage/ui/component
- @requires montage/ui/native-control
- @requires montage/composer/press-composer
+ * @module montage/ui/base/abstract-slider.reel
+ * @requires montage/core/core
+ * @requires montage/ui/component
+ * @requires montage/ui/native-control
+ * @requires montage/composer/press-composer
  */
+
 var AbstractControl = require("ui/base/abstract-control").AbstractControl,
     TranslateComposer = require("composer/translate-composer").TranslateComposer,
     KeyComposer = require("composer/key-composer").KeyComposer,
@@ -51,7 +52,7 @@ var AbstractSlider = exports.AbstractSlider = AbstractControl.specialize( /** @l
                 this._translateComposer.identifier = "thumb";
                 this._translateComposer.axis = this.axis;
                 this._translateComposer.hasMomentum = false;
-                this.addComposerForElement(this._translateComposer, this._sliderThumbTrackElement);
+                this.addComposerForElement(this._translateComposer, this._sliderThumbElement);
 
                 // check for transform support
                 if("webkitTransform" in this.element.style) {
@@ -98,38 +99,56 @@ var AbstractSlider = exports.AbstractSlider = AbstractControl.specialize( /** @l
             this._translateComposer.addEventListener('translateEnd', this, false);
 
             // needs to be fixed for pointer handling
-            this._sliderThumbTrackElement.addEventListener("touchstart", this, false);
+            this._sliderThumbElement.addEventListener("touchstart", this, false);
             document.addEventListener("touchend", this, false);
-            this._sliderThumbTrackElement.addEventListener("mousedown", this, false);
+            this._sliderThumbElement.addEventListener("mousedown", this, false);
             document.addEventListener("mouseup", this, false);
 
-            // Due to a current issue with how the key manager works we need
-            // to listen on both the component and the key composer.
-            // The key composer dispatches the event on the activeTarget
-            // (the component), and we need to listen on the key composer so
-            // that the listeners are installed.
-            this.addEventListener("keyPress", this, false);
-            this._upKeyComposer.addEventListener("keyPress", null, false);
-            this._downKeyComposer.addEventListener("keyPress", null, false);
-            this._leftKeyComposer.addEventListener("keyPress", null, false);
-            this._rightKeyComposer.addEventListener("keyPress", null, false);
+            this._upKeyComposer.addEventListener("keyPress", this, false);
+            this._downKeyComposer.addEventListener("keyPress", this, false);
+            this._leftKeyComposer.addEventListener("keyPress", this, false);
+            this._rightKeyComposer.addEventListener("keyPress", this, false);
         }
     },
 
     willDraw: {
         value: function () {
-
             this._sliderMagnitude = this._calculateSliderMagnitude();
         }
     },
 
+    _previousPercentage: {
+        value: null
+    },
 
     draw: {
         value: function () {
-            if(this.axis === "vertical") {
-                this._sliderThumbTrackElement.style[this._transform] = "translate3d(0," + (100 - this._valuePercentage) + "%,0)";
+            if (this.axis === "vertical") {
+                if (this._isUpdatingTranslate) {
+                    this._sliderThumbElement.style[this._transform] =
+                        "translate3d(0," +
+                        (this._previousPercentage - this._valuePercentage) * this._sliderMagnitude * 0.01 +
+                        "px,0)";
+                    this._isUpdatingTranslate = false;
+                } else {
+                    this._sliderThumbElement.style.top = (100 - this._valuePercentage) + "%";
+                    this._sliderThumbElement.style.left = 0;
+                    this._sliderThumbElement.style[this._transform] = "translate3d(0,0,0)";
+                    this._previousPercentage = this._valuePercentage;
+                }
             } else {
-                this._sliderThumbTrackElement.style[this._transform] = "translate3d(" + this._valuePercentage + "%,0,0)";
+                if (this._isUpdatingTranslate) {
+                    this._sliderThumbElement.style[this._transform] =
+                        "translate3d(" +
+                        (this._valuePercentage - this._previousPercentage) * this._sliderMagnitude * 0.01 +
+                        "px,0,0)";
+                    this._isUpdatingTranslate = false;
+                } else {
+                    this._sliderThumbElement.style.left = this._valuePercentage + "%";
+                    this._sliderThumbElement.style.top = 0;
+                    this._sliderThumbElement.style[this._transform] = "translate3d(0,0,0)";
+                    this._previousPercentage = this._valuePercentage;
+                }
             }
             this.element.setAttribute("aria-valuemax", this.max);
             this.element.setAttribute("aria-valuemin", this.min);
@@ -147,6 +166,7 @@ var AbstractSlider = exports.AbstractSlider = AbstractControl.specialize( /** @l
         value: function (e) {
             this.active = true;
             this.element.focus();
+            this._isUpdatingTranslate = true;
         }
     },
 
@@ -160,6 +180,13 @@ var AbstractSlider = exports.AbstractSlider = AbstractControl.specialize( /** @l
         value: function (e) {
             this.active = true;
             this.element.focus();
+            // gh-1304
+            // I did some experimentation based on using -webkit-user-select on the body element. Apart form the obvious
+            // browser compatibility problems, it made existing text selection pop in and out as the slider is
+            // interacted with. I'm worried about the possible side effects, but this might be the only solution.
+            // The problem it solves is more pressing than the potential downside at this point.
+            e.preventDefault();
+            this._isUpdatingTranslate = true;
         }
     },
 
@@ -167,6 +194,10 @@ var AbstractSlider = exports.AbstractSlider = AbstractControl.specialize( /** @l
         value: function (e) {
             this.active = false;
         }
+    },
+
+    _isUpdatingTranslate: {
+        value: false
     },
 
     handleThumbTranslateStart: {
@@ -187,13 +218,14 @@ var AbstractSlider = exports.AbstractSlider = AbstractControl.specialize( /** @l
             } else {
                 this.value = this._startValue + ((event.translateX - this._startTranslate) / this._sliderMagnitude) * (this._max - this._min);
             }
-
+            this._isUpdatingTranslate = true;
         }
     },
 
     handleThumbTranslateEnd: {
         value: function (e) {
             this.active = false;
+            this._isUpdatingTranslate = false;
         }
     },
 
@@ -264,10 +296,6 @@ var AbstractSlider = exports.AbstractSlider = AbstractControl.specialize( /** @l
      */
     active: {
         value: false
-    },
-
-    _value: {
-        value: 50
     },
 
     _min: {
@@ -345,9 +373,10 @@ var AbstractSlider = exports.AbstractSlider = AbstractControl.specialize( /** @l
     },
 
     /**
-     * Enables or disables the Button from user input. When this property is set to ```false```,
-     * the "disabled" CSS style is applied to the button's DOM element during the next draw cycle. When set to
-     * ```true``` the "disabled" CSS class is removed from the element's class list.
+     * Enables or disables the Button from user input. When this property is
+     * set to `false`, the "disabled" CSS style is applied to the button's DOM
+     * element during the next draw cycle. When set to `true` the "disabled"
+     * CSS class is removed from the element's class list.
      * @type {boolean}
      */
     enabled: {
@@ -361,10 +390,6 @@ var AbstractSlider = exports.AbstractSlider = AbstractControl.specialize( /** @l
     // Machinery
 
     _sliderThumbElement: {
-        value: null
-    },
-
-    _sliderThumbTrackElement: {
         value: null
     },
 
@@ -398,10 +423,20 @@ var AbstractSlider = exports.AbstractSlider = AbstractControl.specialize( /** @l
 
     _calculateSliderMagnitude: {
         value: function() {
+            var computedStyle = window.getComputedStyle(this._element);
+
             if(this.axis === "vertical") {
-                return this._sliderThumbTrackElement.offsetHeight;
+                return (
+                    this._element.clientHeight -
+                    parseFloat(computedStyle.getPropertyValue("padding-top")) -
+                    parseFloat(computedStyle.getPropertyValue("padding-bottom"))
+                );
             } else {
-                return this._sliderThumbTrackElement.offsetWidth;
+                return (
+                    this._element.clientWidth -
+                    parseFloat(computedStyle.getPropertyValue("padding-left")) -
+                    parseFloat(computedStyle.getPropertyValue("padding-right"))
+                );
             }
         }
     },
@@ -457,11 +492,11 @@ var AbstractSlider = exports.AbstractSlider = AbstractControl.specialize( /** @l
                     this._value = this._max;
                 }
 
-                // ~~ is vastly faster then Math.floor
-                // http://jsperf.com/math-floor-vs-math-round-vs-parseint/8
-                this._valuePercentage = (~~(((this._value - this._min) * this._sliderMagnitude) / (this._max - this._min)) * 100 / this._sliderMagnitude);
+                this._valuePercentage = ((this._value - this._min) * 100) / (this._max - this._min);
                 this.needsDraw = true;
             }
         }
     }
+
 });
+

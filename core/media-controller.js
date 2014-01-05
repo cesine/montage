@@ -1,33 +1,3 @@
-/* <copyright>
-Copyright (c) 2012, Motorola Mobility LLC.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice,
-  this list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-
-* Neither the name of Motorola Mobility LLC nor the names of its
-  contributors may be used to endorse or promote products derived from this
-  software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
-</copyright> */
 /**
  * @module montage/ui/controller/media-controller
  * @requires montage/core/core
@@ -50,26 +20,26 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
      -----------------------------------------------------------------------------*/
 
     /**
-     * @type {Number}
-     * @default {Number} 0
+     * @type {number}
+     * @default {number} 0
      */
     STOPPED: { value: 0, writable: false },
 
     /**
-     * @type {Number}
-     * @default {Number} 1
+     * @type {number}
+     * @default {number} 1
      */
     PLAYING: { value: 1, writable: false },
 
     /**
-     * @type {Number}
-     * @default {Number} 2
+     * @type {number}
+     * @default {number} 2
      * */
     PAUSED: { value: 2, writable: false },
 
     /**
-     * @type {Number}
-     * @default {Number} 3
+     * @type {number}
+     * @default {number} 3
      */
     EMPTY: { value: 3, writable: false },
 
@@ -125,7 +95,7 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
     },
     /**
      * @type {Function}
-     * @default {Number} 3
+     * @default {number} 3
      */
     status: {
         get: function () {
@@ -198,15 +168,15 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
      -----------------------------------------------------------------------------*/
 
     /**
-     * @type {Number}
-     * @default {Boolean} true
+     * @type {number}
+     * @default {boolean} true
      */
     autoplay: {
         value: false
     },
 
     /**
-     * @function
+     * @method
      */
     play: {
         value: function () {
@@ -222,15 +192,12 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
         }
     },
 
-    /**
-     * @private
-     */
     _pauseTime: {
         value: null
     },
 
     /**
-     * @function
+     * @method
      */
     pause: {
         value: function () {
@@ -244,7 +211,7 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
     },
 
     /**
-     * @function
+     * @method
      */
     unpause: {
         value: function () {
@@ -259,8 +226,8 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
     },
 
     /**
-     * @function
-     * @returns {Boolean} !playing (true if it is now playing)
+     * @method
+     * @returns {boolean} !playing (true if it is now playing)
      */
     playPause: {
         value: function () {
@@ -290,7 +257,7 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
     },
     /**
      * @type {Function}
-     * @default {Number} 1
+     * @default {number} 1
      */
     playbackRate: {
         get: function () {
@@ -306,7 +273,7 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
 
     /**
      * @type {Function}
-     * @default {Number} 0
+     * @default {number} 0
      */
     currentTime: {
         get: function () {
@@ -336,7 +303,7 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
     },
 
     /**
-     * @function
+     * @method
      */
     rewind: {
         value: function () {
@@ -350,7 +317,7 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
     },
 
     /**
-     * @function
+     * @method
      */
     fastForward: {
         value: function () {
@@ -364,7 +331,7 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
     },
 
     /**
-     * @function
+     * @method
      */
     stop: {
         value: function () {
@@ -388,7 +355,7 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
 
     /**
      * @type {Function}
-     * @returns {Number} this.mediaController.volume * 100
+     * @returns {number} this.mediaController.volume * 100
      */
     volume: {
         get: function () {
@@ -411,7 +378,7 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
     },
 
     /**
-     * @function
+     * @method
      */
     volumeIncrease: {
         value: function () {
@@ -420,7 +387,7 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
     },
 
     /**
-     * @function
+     * @method
      */
     volumeDecrease: {
         value: function () {
@@ -429,7 +396,7 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
     },
 
     /**
-     * @function
+     * @method
      */
     toggleMute: {
         value: function () {
@@ -457,7 +424,7 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
      -----------------------------------------------------------------------------*/
 
     /**
-     * @function
+     * @method
      * @returns itself
      */
     handleLoadedmetadata: {
@@ -491,7 +458,7 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
     },
 
     /**
-     * @function
+     * @method
      */
     handleTimeupdate: {
         value: function () {
@@ -506,7 +473,7 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
     },
 
     /**
-     * @function
+     * @method
      */
     handlePlay: {
         value: function () {
@@ -516,8 +483,9 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
             this.status = this.PLAYING;
         }
     },
+
     /**
-     * @function
+     * @method
      */
     handlePlaying: {
         value: function () {
@@ -527,8 +495,9 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
             this.status = this.PLAYING;
         }
     },
+
     /**
-     * @function
+     * @method
      */
     handlePause: {
         value: function () {
@@ -545,8 +514,9 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
             }
         }
     },
+
     /**
-     * @function
+     * @method
      */
     handleEnded: {
         value: function () {
@@ -559,8 +529,9 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
             this.status = this.STOPPED;
         }
     },
+
     /**
-     * @function
+     * @method
      */
     handleAbort: {
         value: function () {
@@ -570,8 +541,9 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
             this.status = this.STOPPED;
         }
     },
+
     /**
-     * @function
+     * @method
      * @param {Event} event TODO
      */
     handleError: {
@@ -606,7 +578,7 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
     },
 
     /**
-     * @function
+     * @method
      */
     handleEmptied: {
         value: function () {
@@ -666,3 +638,4 @@ var MediaController = exports.MediaController = Target.specialize(/** @lends Med
     blueprint:require("montage")._blueprintDescriptor
 
 });
+

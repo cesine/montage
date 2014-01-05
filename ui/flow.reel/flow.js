@@ -1,45 +1,16 @@
-/* <copyright>
-Copyright (c) 2012, Motorola Mobility LLC.
-All Rights Reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice,
-  this list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-
-* Neither the name of Motorola Mobility LLC nor the names of its
-  contributors may be used to endorse or promote products derived from this
-  software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
-</copyright> */
-
 var Montage = require("montage").Montage,
     Component = require("ui/component").Component,
     observeProperty = require("frb/observers").observeProperty,
     FlowBezierSpline = require("ui/flow.reel/flow-bezier-spline").FlowBezierSpline,
     RangeController = require("core/range-controller").RangeController;
 
-var Flow = exports.Flow = Component.specialize( {
 
-    /**
-     * @private
-     */
+/**
+ * @class Flow
+ * @extends Component
+ */
+var Flow = exports.Flow = Component.specialize( /** @lends Flow# */ {
+
     constructor: {
         value: function Flow() {
             this.super();
@@ -73,9 +44,6 @@ var Flow = exports.Flow = Component.specialize( {
         value: null
     },
 
-    // TODO doc
-    /**
-     */
     __flowTranslateComposer: {
         value: null
     },
@@ -131,7 +99,7 @@ var Flow = exports.Flow = Component.specialize( {
      * position relative to the gesture pointer.  Since this feature is
      * not yet ready, "linear" is the default.
      *
-     * Used by the corresponding <code>FlowTranslateComposer</code> and
+     * Used by the corresponding `FlowTranslateComposer` and
      * communicated by way of a binding to the property of the same
      * name.
      */
@@ -157,9 +125,9 @@ var Flow = exports.Flow = Component.specialize( {
     /**
      * A constant 2d vector used to transform a drag vector into a
      * scroll vector, applicable only in the "linear"
-     * <code>scrollingMode</code>.
+     * `scrollingMode`.
      *
-     * Used by the corresponding <code>FlowTranslateComposer</code> and
+     * Used by the corresponding `FlowTranslateComposer` and
      * communicated by way of a binding to the property of the same
      * name.
      */
@@ -198,7 +166,7 @@ var Flow = exports.Flow = Component.specialize( {
     /**
      * An internal representation of the paths that slides will follow.
      * The paths are taken from the serialization, transformed, and
-     * stored here.  Each path is a <code>FlowBezierSpline</code>.
+     * stored here.  Each path is a `FlowBezierSpline`.
      * @private
      */
     splinePaths: {
@@ -215,12 +183,12 @@ var Flow = exports.Flow = Component.specialize( {
     },
 
     /**
-     * Creates a <code>FlowBezierSpline</code> with data from a path in
-     * the serialization and appends it to <code>splinePaths</code>
+     * Creates a `FlowBezierSpline` with data from a path in
+     * the serialization and appends it to `splinePaths`
      * array.
      *
      * The public interface for modifying the paths of a
-     * <code>Flow</code> is to set the <code>paths</code> propery.
+     * `Flow` is to set the `paths` propery.
      *
      * @private
      */
@@ -284,7 +252,7 @@ var Flow = exports.Flow = Component.specialize( {
      * from knot to knot.
      *
      * The paths property is a getter and setter.  The Flow converts the
-     * paths to and from an internal <code>splinePaths</code>
+     * paths to and from an internal `splinePaths`
      * representation.
      */
     // TODO document the meaning of offsets
@@ -466,7 +434,7 @@ var Flow = exports.Flow = Component.specialize( {
     },
 
     /**
-     * An internal cache of <code>scrollingTransitionDuration</code> in
+     * An internal cache of `scrollingTransitionDuration` in
      * units of miliseconds.
      */
     _scrollingTransitionDurationMiliseconds: {
@@ -474,7 +442,7 @@ var Flow = exports.Flow = Component.specialize( {
     },
 
     /**
-     * An internal cache of <code>scrollingTransitionDuration</code> as
+     * An internal cache of `scrollingTransitionDuration` as
      * a string suitable for CSS.
      */
     _scrollingTransitionDuration: {
@@ -543,7 +511,7 @@ var Flow = exports.Flow = Component.specialize( {
     /**
      * Internal lookup table of CSS timing functions to their
      * corresponding cubic bezier parameters.  This is used by the
-     * <code>scrollingTransitionTimingFunction</code> setter to
+     * `scrollingTransitionTimingFunction` setter to
      * translate <em>named</em> transitions like "ease" to their
      * corresponding cubic bezier internal representation.
      */
@@ -563,8 +531,8 @@ var Flow = exports.Flow = Component.specialize( {
      * functions.
      *
      * This is produced by setting
-     * <code>scrollingTransitionTimingFunction</code>. Note the absence
-     * of the <code>Bezier</code> qualifier.
+     * `scrollingTransitionTimingFunction`. Note the absence
+     * of the `Bezier` qualifier.
      */
     _scrollingTransitionTimingFunctionBezier: {
         value: [.25, .1, .25, 1]
@@ -581,7 +549,7 @@ var Flow = exports.Flow = Component.specialize( {
      * The CSS timing function, "ease" by default, used for smooth
      * scroll transitions.  Supports named timing functions "ease",
      * "linear", "ease-in", "ease-out", "ease-in-out", and the qunituple
-     * <code>cubic-bezier(0, 0, 1, 1)</code> format as well.
+     * `cubic-bezier(0, 0, 1, 1)` format as well.
      */
     scrollingTransitionTimingFunction: {
         get: function () {
@@ -701,7 +669,7 @@ var Flow = exports.Flow = Component.specialize( {
     },
 
     /**
-     * A flag that informs the <code>draw</code> method that the camera
+     * A flag that informs the `draw` method that the camera
      * properties were changed.
      */
     _isCameraUpdated: {
@@ -1045,8 +1013,8 @@ var Flow = exports.Flow = Component.specialize( {
      * content entering the Flow.
      *
      * To accomplish this, the algorithm takes as input the
-     * <code>newVisibleIndexes</code> and its inverse-lookup table,
-     * <code>newContentIndexes</code>.  It uses the content indexes so that it
+     * `newVisibleIndexes` and its inverse-lookup table,
+     * `newContentIndexes`.  It uses the content indexes so that it
      * can triangulate whether the content at any particular visible index will
      * be retained in the new visible indexes at any position.  Otherwise,
      * there will be a hole at that index.
@@ -1056,7 +1024,7 @@ var Flow = exports.Flow = Component.specialize( {
      * repetition.  The content indexes correspond to where the content exists
      * within the backing organized content array.  There are both new and old
      * forms of both indexes.  We use the <em>new, visible</em> indexes, the
-     * <em>new, content</em> indexes, and the <em>old, content</code> indexes
+     * <em>new, content</em> indexes, and the <em>old, content` indexes
      * to triangulate.
      *
      * <pre>
@@ -1108,7 +1076,7 @@ var Flow = exports.Flow = Component.specialize( {
             // Add new values to the end if the visible indexes have grown
             for (j = oldIndexesLength; i < newVisibleIndexes.length; i++) {
                 if (newVisibleIndexes[i] !== null) {
-                    oldVisibleIndexes.set(j,  newVisibleIndexes[i]);
+                    oldVisibleIndexes.set(j, newVisibleIndexes[i]);
                     j++;
                 }
             }
@@ -1126,9 +1094,6 @@ var Flow = exports.Flow = Component.specialize( {
         value: null
     },
 
-    /**
-     * @private
-     */
     willDraw: {
         value: function () {
             var intersections,
@@ -1211,9 +1176,6 @@ var Flow = exports.Flow = Component.specialize( {
         }
     },
 
-    /**
-     * @private
-     */
     draw: {
         value: function (timestamp) {
             var i,
@@ -1300,6 +1262,18 @@ var Flow = exports.Flow = Component.specialize( {
                     iteration = this._repetition._drawnIterations[i];
                     element = iteration.cachedFirstElement || iteration.firstElement;
                     if (indexTime !== null) {
+                        if (element.children[0]) {
+                            if (element.classList.contains("selected")) {
+                                element.children[0].classList.add("selected");
+                            } else {
+                                element.children[0].classList.remove("selected");
+                            }
+                            if (element.classList.contains("active")) {
+                                element.children[0].classList.add("active");
+                            } else {
+                                element.children[0].classList.remove("active");
+                            }
+                        }
                         pos = this._splinePaths[pathIndex].getPositionAtIndexTime(indexTime);
                         rotation = this._splinePaths[pathIndex].getRotationAtIndexTime(indexTime);
                         style =
@@ -1364,7 +1338,7 @@ var Flow = exports.Flow = Component.specialize( {
     },
 
     /**
-     * <code>numberOfIterations</code> represents the number of iterations that
+     * `numberOfIterations` represents the number of iterations that
      * would be visible without culling the ones that are outside the field of
      * view.  It is the same as the number of values from the content after
      * filters are applied by the content controller.
@@ -1376,9 +1350,6 @@ var Flow = exports.Flow = Component.specialize( {
         value: 0
     },
 
-    /**
-     * @private
-     */
     handle_numberOfIterationsChange: {
         value: function () {
             this._updateLength();
@@ -1424,9 +1395,6 @@ var Flow = exports.Flow = Component.specialize( {
         value: null
     },
 
-    /**
-     * @private
-     */
     observeProperty: {
         value: function (key, emit, scope) {
             if (
@@ -1445,9 +1413,6 @@ var Flow = exports.Flow = Component.specialize( {
 
     // TODO remove, will be obsoleted by inner template, provided we have a way
     // to redraft the innter template with a wrapper node.
-    /**
-     * @private
-     */
     templateDidLoad: {
         value: function() {
             var self = this;
@@ -1489,14 +1454,14 @@ var Flow = exports.Flow = Component.specialize( {
     },
 
     // TODO doc
-    /**
+    /*
      */
     _scroll: {
         value: 0
     },
 
     // TODO doc
-    /**
+    /*
      */
     _elasticScrollingRange: {
         value: 20
@@ -1530,28 +1495,28 @@ var Flow = exports.Flow = Component.specialize( {
     },
 
     // TODO doc
-    /**
+    /*
      */
     _slideOffsetsLength: {
         value: 0
     },
 
     // TODO doc
-    /**
+    /*
      */
     _maxSlideOffsetIndex: {
         value: -1
     },
 
     // TODO doc
-    /**
+    /*
      */
     _minSlideOffsetIndex: {
         value: 2e9
     },
 
     // TODO doc
-    /**
+    /*
      */
     _updateSlideOffset: {
         value: function (index, value) {
@@ -1577,7 +1542,7 @@ var Flow = exports.Flow = Component.specialize( {
     },
 
     // TODO doc
-    /**
+    /*
      */
     _incrementSlideOffset: {
         value: function (index, value) {
@@ -1586,7 +1551,7 @@ var Flow = exports.Flow = Component.specialize( {
     },
 
     // TODO doc
-    /**
+    /*
      */
     _removeSlideOffset: {
         value: function (index) {
@@ -1622,7 +1587,7 @@ var Flow = exports.Flow = Component.specialize( {
     },
 
     // TODO doc
-    /**
+    /*
      */
     _getSlideOffset: {
         value: function (index) {
@@ -1814,9 +1779,6 @@ var Flow = exports.Flow = Component.specialize( {
         }
     },
 
-    /**
-     * @private
-     */
     serializeSelf: {
         value: function(serializer) {
             serializer.setAllProperties();

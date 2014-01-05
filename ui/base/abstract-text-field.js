@@ -11,10 +11,11 @@ var CLASS_PREFIX = "montage-TextField";
  * @extends AbstractControl
  */
 var AbstractTextField = exports.AbstractTextField = AbstractControl.specialize(
-    /* @lends AbstractTextField# */
+/** @lends AbstractTextField# */
 {
+
     /**
-     * Dispatched when the textfield is activated through a enter.
+     * Dispatched when the textfield is activated when the user presses enter.
      * @event action
      * @memberof AbstractTextField
      * @param {Event} event
@@ -116,13 +117,7 @@ var AbstractTextField = exports.AbstractTextField = AbstractControl.specialize(
 
     prepareForActivationEvents: {
         value: function() {
-            // Due to a current issue with how the key manager works we need
-            // to listen on both the component and the key composer.
-            // The key composer dispatches the event on the activeTarget
-            // (the component), and we need to listen on the key composer so
-            // that the listeners are installed.
-            this.addEventListener("keyPress", this, false);
-            this._keyComposer.addEventListener("keyPress", null, false);
+            this._keyComposer.addEventListener("keyPress", this, false);
         }
     },
 
@@ -140,7 +135,13 @@ var AbstractTextField = exports.AbstractTextField = AbstractControl.specialize(
     draw: {
         value: function() {
             var value = this.value;
-            this.element.value = value || false === value ? value.toString() : "";
+            if (value === null ||  typeof value === "undefined") {
+                this.element.value = "";
+            } else if ( typeof value === "boolean" ||  typeof value === "object" ||  typeof value === "number") {
+                this.element.value = value.toString();
+            } else {
+                this.element.value = value;
+            }
             if (this.placeholderValue != null) {
                 this.element.setAttribute("placeholder", this.placeholderValue);
             }
@@ -191,4 +192,6 @@ var AbstractTextField = exports.AbstractTextField = AbstractControl.specialize(
             }
         }
     }
+
 });
+

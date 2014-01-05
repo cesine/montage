@@ -4,15 +4,21 @@ var Montage = require("montage").Montage,
     Point = require("core/geometry/point").Point,
     convertPointFromPageToNode = require("core/dom").convertPointFromPageToNode;
 
-// TODO doc
 /**
+ * @class FlowTranslateComposer
+ * @extends TranslateComposer
  */
-var FlowTranslateComposer = exports.FlowTranslateComposer = TranslateComposer.specialize( {
+var FlowTranslateComposer = exports.FlowTranslateComposer = TranslateComposer.specialize( /** @lends FlowTranslateComposer# */ {
 
     constructor: {
         value: function FlowTranslateComposer() {
             this.super();
+            this.handleMousewheel = this.handleWheel;
         }
+    },
+
+    stealChildrenPointer: {
+        value: true
     },
 
     _scrollingMode: {
@@ -49,7 +55,7 @@ var FlowTranslateComposer = exports.FlowTranslateComposer = TranslateComposer.sp
     /**
      * A constant 2d vector used to transform a drag vector into a
      * scroll vector, applicable only in the "linear"
-     * <code>scrollingMode</code>.
+     * `scrollingMode`.
      *
      * Bound to the eponymous property of the Flow that owns it.
      */
@@ -183,6 +189,7 @@ var FlowTranslateComposer = exports.FlowTranslateComposer = TranslateComposer.sp
             translateStartEvent.scroll = this._scroll;
             translateStartEvent.translateX = 0;
             translateStartEvent.translateY = 0;
+            translateStartEvent.pointer = this._observedPointer;
             this.dispatchEvent(translateStartEvent);
         }
     },
@@ -198,6 +205,7 @@ var FlowTranslateComposer = exports.FlowTranslateComposer = TranslateComposer.sp
             translateEndEvent.scroll = this._scroll;
             translateEndEvent.translateX = 0;
             translateEndEvent.translateY = 0;
+            translateEndEvent.pointer = this._observedPointer;
             this.dispatchEvent(translateEndEvent);
         }
     },
@@ -212,6 +220,7 @@ var FlowTranslateComposer = exports.FlowTranslateComposer = TranslateComposer.sp
             translateEvent.scroll = this._scroll;
             translateEvent.translateX = 0;
             translateEvent.translateY = 0;
+            translateEvent.pointer = this._observedPointer;
             this.dispatchEvent(translateEvent);
         }
     },
@@ -307,21 +316,22 @@ var FlowTranslateComposer = exports.FlowTranslateComposer = TranslateComposer.sp
     // TODO doc
     /**
      */
-    handleMousewheel: {
+    handleWheel: {
         value: function(event) {
             var self = this;
 
             // If this composers' component is claiming the "wheel" pointer then handle the event
             if (this.eventManager.isPointerClaimedByComponent(this._WHEEL_POINTER, this.component)) {
-                var oldPageY = this._pageY;
+                var oldPageY = this._pageY,
+                    deltaY = event.wheelDeltaY || -event.deltaY || 0;
 
                 if (this.translateStrideX) {
                     window.clearTimeout(this._mousewheelStrideTimeout);
-                    if ((this._mousewheelStrideTimeout === null) || (Math.abs(event.wheelDeltaY) > Math.abs(this._previousDeltaY * (this._mousewheelStrideTimeout === null ? 2 : 4)))) {
-                        if (event.wheelDeltaY > 1) {
+                    if ((this._mousewheelStrideTimeout === null) || (Math.abs(deltaY) > Math.abs(this._previousDeltaY * (this._mousewheelStrideTimeout === null ? 2 : 4)))) {
+                        if (deltaY > 1) {
                             this.callDelegateMethod("previousStride", this);
                         } else {
-                            if (event.wheelDeltaY < -1) {
+                            if (deltaY < -1) {
                                 this.callDelegateMethod("nextStride", this);
                             }
                         }
@@ -330,7 +340,7 @@ var FlowTranslateComposer = exports.FlowTranslateComposer = TranslateComposer.sp
                         self._mousewheelStrideTimeout = null;
                         self._previousDeltaY = 0;
                     }, 70);
-                    self._previousDeltaY = event.wheelDeltaY;
+                    self._previousDeltaY = deltaY;
                     if (this._shouldPreventDefault(event)) {
                         event.preventDefault();
                     }
@@ -338,7 +348,7 @@ var FlowTranslateComposer = exports.FlowTranslateComposer = TranslateComposer.sp
                     if (this._translateEndTimeout === null) {
                         this._dispatchTranslateStart();
                     }
-                    this._pageY = this._pageY + ((event.wheelDeltaY * 20) / 100);
+                    this._pageY = this._pageY + ((deltaY * 20) / 100);
                     this._updateScroll();
                     this._dispatchTranslate();
                     window.clearTimeout(this._translateEndTimeout);
