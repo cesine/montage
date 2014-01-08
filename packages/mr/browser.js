@@ -13,6 +13,7 @@ var URL = require("mini-url");
 var GET = "GET";
 var APPLICATION_JAVASCRIPT_MIMETYPE = "application/javascript";
 var FILE_PROTOCOL = "file:";
+var CHROME_EXTENSION_PROTOCOL = "chrome-extension:";
 var global = typeof global !== "undefined" ? global : window;
 
 Require.getLocation = function() {
@@ -34,38 +35,72 @@ function xhrSuccess(req) {
 // http://dl.dropbox.com/u/131998/yui/misc/get/browser-capabilities.html
 Require.read = function (url) {
 
-    var request = new XMLHttpRequest();
+    if (URL.resolve(window.location, url).indexOf(FILE_PROTOCOL) === 0) {
+        throw new Error("XHR does not function for file: protocol");
+    }
     var response = Promise.defer();
 
-    function onload() {
-        if (xhrSuccess(request)) {
-            response.resolve(request.responseText);
-        } else {
-            onerror();
-        }
-    }
-
-    function onerror() {
-        response.reject(new Error("Can't XHR " + JSON.stringify(url)));
-    }
-
-    try {
-        request.open(GET, url, true);
-        if (request.overrideMimeType) {
-            request.overrideMimeType(APPLICATION_JAVASCRIPT_MIMETYPE);
-        }
-        request.onreadystatechange = function () {
-            if (request.readyState === 4) {
-                onload();
+    if (URL.resolve(window.location, url).indexOf(CHROME_EXTENSION_PROTOCOL) === 0) {
+        
+        // Prepare a message to the world outside the sandbox
+        var filePlease = {
+            key: 'xhr-file',
+            params: {
+                filename: url
             }
         };
-        request.onload = request.load = onload;
-        request.onerror = request.error = onerror;
-    } catch (exception) {
-        response.reject(exception);
-    }
+        filePlease.privatechannel = filePlease.key + filePlease.params.filename;
 
-    request.send();
+        // Subscribe for the response
+        PubSub.hub.subscribe(filePlease.privatechannel, function(data) {
+            var responseText = data.result;
+            if (responseText) {
+                // console.log("[app.js] Post Message replied to xhr-file: \n", data);
+                response.resolve(responseText);
+            } else {
+                response.reject(new Error("Can't XHR " + JSON.stringify(url)));
+            }
+
+            PubSub.hub.unsubscribe(this.privatechannel, null, this);
+        }, filePlease);
+
+        // Send the request out
+        // console.warn("Experimental: using a post message to your sandbox bridge to get \n" + url);
+        window.top.postMessage(filePlease, '*');
+
+    } else {
+        var request = new XMLHttpRequest();
+
+        function onload() {
+            if (xhrSuccess(request)) {
+                response.resolve(request.responseText);
+            } else {
+                onerror();
+            }
+        }
+
+        function onerror() {
+            response.reject(new Error("Can't XHR " + JSON.stringify(url)));
+        }
+
+        try {
+            request.open(GET, url, true);
+            if (request.overrideMimeType) {
+                request.overrideMimeType(APPLICATION_JAVASCRIPT_MIMETYPE);
+            }
+            request.onreadystatechange = function () {
+                if (request.readyState === 4) {
+                    onload();
+                }
+            };
+            request.onload = request.load = onload;
+            request.onerror = request.error = onerror;
+        } catch (exception) {
+            response.reject(exception);
+        }
+
+        request.send();
+    }
     return response.promise;
 };
 
