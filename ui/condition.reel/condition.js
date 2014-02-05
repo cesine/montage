@@ -75,6 +75,12 @@ exports.Condition = Component.specialize( /** @lends Condition# */ {
                     this._contents = this.domContent;
                     this.domContent = null;
                 }
+            } else {
+                if (value) {
+                    this.element.hidden = false;
+                } else {
+                    this.element.hidden = true;
+                }
             }
         }
     },
