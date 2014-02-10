@@ -46,7 +46,9 @@ var AbstractImage = exports.AbstractImage = Component.specialize( /** @lends Abs
         set: function(value) {
             if (this._src !== value) {
                 this._src = value;
-
+                if (value) {
+                    this._src = value = value.trim();
+                }
                 value = this._getRebasedSrc();
                 if (value) {
                     this._isLoadingImage = true;
@@ -115,6 +117,7 @@ var AbstractImage = exports.AbstractImage = Component.specialize( /** @lends Abs
             url = this._getRebasedSrc();
 
             if (url) {
+                url = url.trim();
                 this.src = url;
             }
         }
@@ -133,11 +136,13 @@ var AbstractImage = exports.AbstractImage = Component.specialize( /** @lends Abs
                 absoluteUrlRegExp = /^[\w\-]+:|^\//;
 
             if (url) {
+                url = url.trim();
                 if (absoluteUrlRegExp.test(url)) {
                     return url;
                 } else if (this._ownerDocumentPart) {
                     baseUrl = this._ownerDocumentPart.template.getBaseUrl();
                     if (baseUrl) {
+                        console.log(URL.resolve(baseUrl, url));
                         return URL.resolve(baseUrl, url);
                     }
                 }
