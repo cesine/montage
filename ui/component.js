@@ -1690,7 +1690,7 @@ var Component = exports.Component = Target.specialize(/** @lends Component# */ {
                 if (value.lastIndexOf("null ") > -1) {
                     value = value.substring(value.lastIndexOf("null ") + 5);
                 }
-                console.log("value is:::"+value+":::");
+                // console.log("value is:::"+value+":::");
                 template.setAttribute(attributeName, value);
             }
 

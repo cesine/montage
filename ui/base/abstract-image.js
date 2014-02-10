@@ -137,7 +137,6 @@ var AbstractImage = exports.AbstractImage = Component.specialize( /** @lends Abs
                 absoluteUrlRegExp = /^[\w\-]+:|^\//;
 
             if (url) {
-                url = url.trim().replace(/^%20/,"");
                 if (absoluteUrlRegExp.test(url)) {
                     return url;
                 } else if (this._ownerDocumentPart) {
