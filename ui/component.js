@@ -1686,7 +1686,11 @@ var Component = exports.Component = Target.specialize(/** @lends Component# */ {
                     value = (template.getAttribute(attributeName) || "") + (attributeName === "style" ? "; " : " ") +
                         attribute.nodeValue;
                 }
-
+                // console.log("value is:::"+value+":::");
+                if (value.lastIndexOf("null ") > -1) {
+                    value = value.substring(value.lastIndexOf("null ") + 5);
+                }
+                console.log("value is:::"+value+":::");
                 template.setAttribute(attributeName, value);
             }
 
