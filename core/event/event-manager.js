@@ -1745,7 +1745,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 mutableEvent = event;
             }
 
-            if (Element.isElement(mutableEvent.target) || mutableEvent.target instanceof Document ) {
+            if (Element.isElement(mutableEvent.target) || mutableEvent.target instanceof Document ||  mutableEvent.target instanceof Window) {
                 eventPath = this._eventPathForDomTarget(mutableEvent.target);
             } else {
                 eventPath = this._eventPathForTarget(mutableEvent.target);
