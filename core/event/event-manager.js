@@ -1,16 +1,16 @@
 /*global Window,Document,Element,Event,Components,Touch */
+
 /**
- *
  * @author: Lea Verou
  * @license: Licensed under The MIT License. See license.txt and http://www.opensource.org/licenses/mit-license.php.
  * @website: http://leaverou.github.com/chainvas/
  */
 
 /**
- @module montage/core/event/event-manager
- @requires montage/core/core
- @requires montage/core/event/mutable-event
- @requires montage/core/event/action-event-listener
+ * @module montage/core/event/event-manager
+ * @requires montage/core/core
+ * @requires montage/core/event/mutable-event
+ * @requires montage/core/event/action-event-listener
  */
 
 var Montage = require("montage").Montage,
@@ -382,25 +382,22 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
             }
 
             // In some browsers (Firefox) each element has their own addEventLister/removeEventListener
-            // Methodology to find all elements found in Chainvas
+            // Methodology to find all elements found in Chainvas (now mostly gone from this)
             if(aWindow.HTMLDivElement.prototype.addEventListener !== aWindow.Element.prototype.nativeAddEventListener) {
                 if (aWindow.HTMLElement &&
-                    'addEventListener' in aWindow.HTMLElement.prototype &&
-                    aWindow.Components &&
-                    aWindow.Components.interfaces
+                    'addEventListener' in aWindow.HTMLElement.prototype
                 ) {
-                    var candidate, candidatePrototype;
-
-                    for(candidate in Components.interfaces) {
-                        if(candidate.match(/^nsIDOMHTML\w*Element$/)) {
-                            candidate = candidate.replace(/^nsIDOM/, '');
-                            if(candidate = window[candidate]) {
-                                candidatePrototype = candidate.prototype;
-                                candidatePrototype.nativeAddEventListener = candidatePrototype.addEventListener;
-                                candidatePrototype.addEventListener = aWindow.Element.prototype.addEventListener;
-                                candidatePrototype.nativeRemoveEventListener = candidatePrototype.removeEventListener;
-                                candidatePrototype.removeEventListener = aWindow.Element.prototype.removeEventListener;
-                            }
+                    var candidates = Object.getOwnPropertyNames(aWindow),
+                        candidate, candidatePrototype,
+                        i = 0, candidatesLength = candidates.length;
+                    for (i; i < candidatesLength; i++) {
+                        candidate = candidates[i];
+                        if(candidate.match(/^HTML\w*Element$/) && typeof candidate === "function") {
+                            candidatePrototype = candidate.prototype;
+                            candidatePrototype.nativeAddEventListener = candidatePrototype.addEventListener;
+                            candidatePrototype.addEventListener = aWindow.Element.prototype.addEventListener;
+                            candidatePrototype.nativeRemoveEventListener = candidatePrototype.removeEventListener;
+                            candidatePrototype.removeEventListener = aWindow.Element.prototype.removeEventListener;
                         }
                     }
                 }

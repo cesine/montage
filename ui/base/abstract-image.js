@@ -46,15 +46,11 @@ var AbstractImage = exports.AbstractImage = Component.specialize( /** @lends Abs
         set: function(value) {
             if (this._src !== value) {
                 this._src = value;
-                if (value) {
-                    this._src = value = value.trim();
-                }
+
                 value = this._getRebasedSrc();
                 if (value) {
-                    this._isLoadingImage = true;
                     this._isInvalidSrc = false;
-                    console.log("setting image src:" +value);
-                    this._image.src = value;
+                    this._loadImage(value);
                 } else {
                     this._isInvalidSrc = true;
                 }
@@ -65,6 +61,14 @@ var AbstractImage = exports.AbstractImage = Component.specialize( /** @lends Abs
             return this._src;
         }
     },
+
+    _loadImage: {
+        value: function(src) {
+            this._image.src = src;
+            this._isLoadingImage = !this._image.complete;
+        }
+    },
+
 
     // Invalid source is set when the src property is a relative location that
     // the image was not able to rebase using the templates baseUrl or any
@@ -113,13 +117,14 @@ var AbstractImage = exports.AbstractImage = Component.specialize( /** @lends Abs
 
     _rebaseSrc: {
         value: function() {
-            var url;
+            var value;
 
-            url = this._getRebasedSrc();
+            value = this._getRebasedSrc();
 
-            if (url) {
-                url = url.trim();
-                this.src = url;
+            if (value) {
+                this._isInvalidSrc = false;
+                this._loadImage(value);
+                this.needsDraw = true;
             }
         }
     },
@@ -142,7 +147,6 @@ var AbstractImage = exports.AbstractImage = Component.specialize( /** @lends Abs
                 } else if (this._ownerDocumentPart) {
                     baseUrl = this._ownerDocumentPart.template.getBaseUrl();
                     if (baseUrl) {
-                        console.log(URL.resolve(baseUrl, url));
                         return URL.resolve(baseUrl, url);
                     }
                 }
@@ -167,7 +171,7 @@ var AbstractImage = exports.AbstractImage = Component.specialize( /** @lends Abs
             if (this._isLoadingImage || this._isInvalidSrc) {
                 src = this.emptyImageSrc;
             } else {
-                src = this._src;
+                src = this._getRebasedSrc();
             }
 
             // data: procotol is considered local and fires a CORS exception
