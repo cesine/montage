@@ -65,11 +65,26 @@ TestPageLoader.queueTest("ui/condition", {src: "ui/condition/condition-test-page
             });
         });
 
+        describe("condition with removal strategy hide", function() {
+           
+            it("should hide element if the removalStrategy is hide", function() {
+                conditionTestPage.test.hideValue = true;
+                conditionTestPage.waitForDraw();
+
+                runs(function() {
+                    var conditionDiv = conditionTestPage.iframe.contentDocument.getElementsByClassName("fetchHidden")[0];
+                    expect(conditionDiv.innerHTML).toBe("<span>Hidden Content</span>");
+                    expect(conditionDiv.hidden).toBeTruthy();
+                });
+            });
+        });
+
         it("should not remove contents if the initial value of the condition is true", function() {
             var condition = conditionTestPage.test.templateObjects.conditionTrue;
 
             expect(condition.element.innerHTML).toBe("<span>Bar</span>");
         });
+
     });
 });
 

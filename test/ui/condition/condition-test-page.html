@@ -38,6 +38,16 @@ POSSIBILITY OF SUCH DAMAGE.
         "test": {
             "prototype": "ui/condition/test"
         },
+        "conditionHidden": {
+            "prototype": "montage/ui/condition.reel",
+            "properties": {
+                "element": {"#": "hideRemovalStrategy"},
+                "removalStrategy": "hide"
+            },
+            "bindings": {
+                "condition": {"<->": "@test.hideValue"}
+            }
+        },
         "conditionHide": {
             "prototype": "montage/ui/condition.reel",
             "properties": {
@@ -76,6 +86,7 @@ POSSIBILITY OF SUCH DAMAGE.
 <body>
 
     <div data-montage-id="hideMe" class="fetchHide"><span>Hello</span></div>
+    <div data-montage-id="hideRemovalStrategy" class="fetchHidden"><span>Hidden Content</span></div>
     <div data-montage-id="removeContent" class="fetchRemove"><span>Foo</span></div>
     <div data-montage-id="conditionTrue"><span>Bar</span></div>
 </body>
