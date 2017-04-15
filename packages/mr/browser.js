@@ -128,6 +128,22 @@ Require.XhrLoader = function (config) {
             module.type = "javascript";
             module.text = text;
             module.location = url;
+        },function (error) {
+            //try .node instead of .js
+            url = url.replace(/\.js$/g, ".node");
+            config.read(url)
+            .then(function (binary) {
+                module.type = "node";
+                module.binary = binary;
+                module.text = "";
+                module.location = url;
+            },function (error) {
+                console.log("This is probably a node library: "+ url);
+                module.type = "node";
+                module.binary = "";
+                module.text = "";
+                module.location = url;
+            });
         });
     };
 };

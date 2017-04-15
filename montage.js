@@ -264,7 +264,8 @@ if (typeof window !== "undefined") {
                     config.lint = function (module) {
                         montageRequire.async("core/jshint")
                         .then(function (JSHINT) {
-                            if (!JSHINT.JSHINT(module.text)) {
+                            // Dont run jshint on binary .node files
+                            if (!JSHINT.JSHINT(module.text) && module.location.indexOf(".node") !== module.location.length - 5) {
                                 console.warn("JSHint Error: "+module.location);
                                 JSHINT.JSHINT.errors.forEach(function(error) {
                                     if (error) {
@@ -305,39 +306,45 @@ if (typeof window !== "undefined") {
             if (!module.factory)
                 return;
             var defaultFactory = module.factory;
-            module.factory = function(require, exports, module) {
-                defaultFactory.call(this, require, exports, module);
-                for (var name in exports) {
-                    var object = exports[name];
-                    // avoid attempting to initialize a non-object
-                    if (!(object instanceof Object)) {
-                    // avoid attempting to reinitialize an aliased property
-                    } else if (object.hasOwnProperty("_montage_metadata") && !object._montage_metadata.isInstance) {
-                        object._montage_metadata.aliases.push(name);
-                        object._montage_metadata.objectName = name;
-                    } else if (!Object.isSealed(object)) {
-                        var id = module.id.replace(
-                            reverseReelExpression,
-                            reverseReelFunction
-                        );
-                        Object.defineProperty(
-                            object,
-                            "_montage_metadata",
-                            {
-                                value: {
-                                    require: require,
-                                    module: id,
-                                    moduleId: id, // deprecated
-                                    property: name,
-                                    objectName: name, // deprecated
-                                    aliases: [name],
-                                    isInstance: false
+            // Use a noop function for the factory of a native node extension
+            if (module.type === "node") {
+                module.factory = function(require, exports, module) {
+                    console.log("Factory for a .node extension");
+                };
+            } else {
+                module.factory = function(require, exports, module) {
+                    defaultFactory.call(this, require, exports, module);
+                    for (var name in exports) {
+                        var object = exports[name];
+                        // avoid attempting to initialize a non-object
+                        if (!(object instanceof Object)) {
+                            // avoid attempting to reinitialize an aliased property
+                        } else if (object.hasOwnProperty("_montage_metadata") && !object._montage_metadata.isInstance) {
+                            object._montage_metadata.aliases.push(name);
+                            object._montage_metadata.objectName = name;
+                        } else if (!Object.isSealed(object)) {
+                            var id = module.id.replace(
+                                reverseReelExpression,
+                                reverseReelFunction
+                            );
+                            Object.defineProperty(
+                                object,
+                                "_montage_metadata", {
+                                    value: {
+                                        require: require,
+                                        module: id,
+                                        moduleId: id, // deprecated
+                                        property: name,
+                                        objectName: name, // deprecated
+                                        aliases: [name],
+                                        isInstance: false
+                                    }
                                 }
-                            }
-                        );
+                            );
+                        }
                     }
-                }
-            };
+                };
+            }
             return module;
         };
     };
